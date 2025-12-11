@@ -19,7 +19,6 @@
   <ItemGroup>
     <Folder Include="Converter\" />
     <Folder Include="Dialogs\" />
-    <Folder Include="Services\" />
     <Folder Include="Views\" />
   </ItemGroup>
 

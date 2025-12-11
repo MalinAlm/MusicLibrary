@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using MusicLibrary.ViewModels;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -11,14 +12,22 @@ using System.Windows.Shapes;
 
 namespace MusicLibrary
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
+
+        private MusicViewModel _vm = new MusicViewModel();
+
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = _vm;
+
+            Loaded += MainWindow_Loaded;
+        }
+
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            await _vm.LoadDataAsync();
         }
     }
 }
