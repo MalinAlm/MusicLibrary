@@ -21,6 +21,8 @@ namespace MusicLibrary.ViewModels
         public ObservableCollection<Track> LibraryTracks { get; } = new();
         public RelayCommand CreatePlaylistCommand { get; }
         public RelayCommand AddTrackToPlaylistCommand { get; }
+        public RelayCommand UpdatePlaylistCommand { get; }
+
 
         public MusicViewModel()
         {
@@ -34,8 +36,31 @@ namespace MusicLibrary.ViewModels
                 _ => SelectedPlaylist != null && SelectedLibraryTrack != null
             );
 
+            UpdatePlaylistCommand = new RelayCommand(
+                _ => UpdatePlaylistAsync(),
+                _ => SelectedPlaylist != null &&
+                     !string.IsNullOrWhiteSpace(EditPlaylistName) &&
+                     EditPlaylistName != SelectedPlaylist.Name
+            );
         }
 
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                if (_isLoading != value)
+                {
+                    _isLoading = value;
+                    OnPropertyChanged(nameof(IsLoading));
+                }
+            }
+        }
+
+        private const int PageSize = 15;
+        private int _currentOffset = 0;
+        private bool _hasMoreTracks = true;
 
         private Playlist? _selectedPlaylist;
         public Playlist? SelectedPlaylist
@@ -43,15 +68,21 @@ namespace MusicLibrary.ViewModels
             get => _selectedPlaylist;
             set
             {
-                if (_selectedPlaylist != value)
-                {
-                    _selectedPlaylist = value;
-                    OnPropertyChanged(nameof(SelectedPlaylist));
+                _selectedPlaylist = value;
+                OnPropertyChanged(nameof(SelectedPlaylist));
 
-                    if (_selectedPlaylist != null)
-                        _ = LoadTracksForSelectedPlaylistAsync();
+                if (_selectedPlaylist != null)
+                {
+                    EditPlaylistName = _selectedPlaylist.Name;
+
+                    _currentOffset = 0;
+                    _hasMoreTracks = true;
+                    Tracks.Clear();
+
+                    _ = LoadMoreTracksAsync();
                 }
             }
+
         }
 
         private string _newPlaylistName = string.Empty;
@@ -67,6 +98,17 @@ namespace MusicLibrary.ViewModels
             }
         }
 
+        private string _editPlaylistName = string.Empty;
+        public string EditPlaylistName
+        {
+            get => _editPlaylistName;
+            set
+            {
+                _editPlaylistName = value;
+                OnPropertyChanged(nameof(EditPlaylistName));
+                UpdatePlaylistCommand?.RaiseCanExecuteChanged();
+            }
+        }
 
 
         public async Task LoadDataAsync()
@@ -133,6 +175,49 @@ namespace MusicLibrary.ViewModels
 
             await LoadTracksForSelectedPlaylistAsync();
         }
+
+        private async void UpdatePlaylistAsync()
+        {
+            await _service.UpdatePlaylistNameAsync(
+                SelectedPlaylist!.PlaylistId,
+                EditPlaylistName
+            );
+
+            SelectedPlaylist.Name = EditPlaylistName;
+            OnPropertyChanged(nameof(Playlists));
+        }
+
+        public async Task LoadMoreTracksAsync()
+        {
+            if (!_hasMoreTracks || IsLoading || SelectedPlaylist == null)
+                return;
+
+            try
+            {
+                IsLoading = true;
+
+                var newTracks = await _service.GetTracksForPlaylistPagedAsync(
+                    SelectedPlaylist.PlaylistId,
+                    _currentOffset,
+                    PageSize
+                );
+
+                foreach (var t in newTracks)
+                    Tracks.Add(t);
+
+                _currentOffset += newTracks.Count;
+
+                if (newTracks.Count < PageSize)
+                    _hasMoreTracks = false;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+
+
 
     }
 }

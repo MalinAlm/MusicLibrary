@@ -90,6 +90,37 @@ namespace MusicLibrary.Services
             );
         }
 
+        public async Task UpdatePlaylistNameAsync(int playlistId, string newName)
+        {
+            using var db = new MusicContext();
+
+            var playlist = await db.Playlists
+                .FirstOrDefaultAsync(p => p.PlaylistId == playlistId);
+
+            if (playlist == null)
+                return;
+
+            playlist.Name = newName;
+            await db.SaveChangesAsync();
+        }
+
+        public async Task<List<Track>> GetTracksForPlaylistPagedAsync(
+            int playlistId,
+            int skip,
+            int take)
+        {
+            using var db = new MusicContext();
+
+            return await db.PlaylistTracks
+                .Where(pt => pt.PlaylistId == playlistId)
+                .Include(pt => pt.Track)
+                    .ThenInclude(t => t.Album)
+                .Select(pt => pt.Track)
+                .OrderBy(t => t.TrackId)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync();
+        }
 
     }
 }

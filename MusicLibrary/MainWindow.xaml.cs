@@ -52,12 +52,24 @@ public partial class MainWindow : Window
     private void TreeView_SelectedItemChanged(
     object sender,
     RoutedPropertyChangedEventArgs<object> e)
+{
+    if (DataContext is MusicViewModel vm &&
+        e.NewValue is Track track)
     {
-        if (DataContext is MusicViewModel vm &&
-            e.NewValue is Track track)
+        vm.SelectedLibraryTrack = track;
+    }
+}
+    private async void DataGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (e.VerticalOffset + e.ViewportHeight >= e.ExtentHeight - 20)
         {
-            vm.SelectedLibraryTrack = track;
+            if (DataContext is MusicViewModel vm)
+            {
+                await vm.LoadMoreTracksAsync();
+            }
         }
     }
+
+
 
 }
