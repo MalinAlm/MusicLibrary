@@ -22,6 +22,7 @@ namespace MusicLibrary.ViewModels
         public RelayCommand CreatePlaylistCommand { get; }
         public RelayCommand AddTrackToPlaylistCommand { get; }
         public RelayCommand UpdatePlaylistCommand { get; }
+        public RelayCommand RemoveTrackFromPlaylistCommand { get; }
 
 
         public MusicViewModel()
@@ -41,6 +42,11 @@ namespace MusicLibrary.ViewModels
                 _ => SelectedPlaylist != null &&
                      !string.IsNullOrWhiteSpace(EditPlaylistName) &&
                      EditPlaylistName != SelectedPlaylist.Name
+            );
+
+            RemoveTrackFromPlaylistCommand = new RelayCommand(
+                _ => RemoveTrackFromPlaylistAsync(),
+                _ => SelectedPlaylist != null && SelectedPlaylistTrack != null
             );
         }
 
@@ -110,6 +116,17 @@ namespace MusicLibrary.ViewModels
             }
         }
 
+        private Track? _selectedPlaylistTrack;
+        public Track? SelectedPlaylistTrack
+        {
+            get => _selectedPlaylistTrack;
+            set
+            {
+                _selectedPlaylistTrack = value;
+                OnPropertyChanged(nameof(SelectedPlaylistTrack));
+                RemoveTrackFromPlaylistCommand?.RaiseCanExecuteChanged();
+            }
+        }
 
         public async Task LoadDataAsync()
         {
@@ -216,8 +233,18 @@ namespace MusicLibrary.ViewModels
             }
         }
 
+        private async void RemoveTrackFromPlaylistAsync()
+        {
+            if (SelectedPlaylist == null || SelectedPlaylistTrack == null)
+                return;
 
+            await _service.RemoveTrackFromPlaylistAsync(
+             SelectedPlaylist.PlaylistId,
+             SelectedPlaylistTrack.TrackId
+         );
 
-
+            Tracks.Remove(SelectedPlaylistTrack);
+            SelectedPlaylistTrack = null;
+        }
     }
 }

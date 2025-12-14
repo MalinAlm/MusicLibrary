@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -69,7 +70,20 @@ public partial class MainWindow : Window
             }
         }
     }
+    private void RowHeader_DeleteClicked(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is DataGridRowHeader header &&
+            header.DataContext is Track track &&
+            DataContext is MusicViewModel vm)
+        {
+            vm.SelectedPlaylistTrack = track;
 
+            if (vm.RemoveTrackFromPlaylistCommand.CanExecute(null))
+            {
+                vm.RemoveTrackFromPlaylistCommand.Execute(null);
+            }
+        }
+    }
 
 
 }

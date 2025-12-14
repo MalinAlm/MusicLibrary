@@ -90,6 +90,18 @@ namespace MusicLibrary.Services
             );
         }
 
+        public async Task RemoveTrackFromPlaylistAsync(int playlistId, int trackId)
+        {
+            using var db = new MusicContext();
+
+            await db.Database.ExecuteSqlRawAsync(
+                "DELETE FROM music.playlist_track WHERE PlaylistId = @p0 AND TrackId = @p1",
+                playlistId,
+                trackId
+            );
+        }
+
+
         public async Task UpdatePlaylistNameAsync(int playlistId, string newName)
         {
             using var db = new MusicContext();
