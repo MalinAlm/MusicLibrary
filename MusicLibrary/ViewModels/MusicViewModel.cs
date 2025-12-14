@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using MusicLibrary.Commands;
 
 namespace MusicLibrary.ViewModels
 {
@@ -18,10 +19,25 @@ namespace MusicLibrary.ViewModels
         public ObservableCollection<Playlist> Playlists { get; } = new();
         public ObservableCollection<Track> Tracks { get; } = new();
         public ObservableCollection<Track> LibraryTracks { get; } = new();
+        public RelayCommand CreatePlaylistCommand { get; }
+        public RelayCommand AddTrackToPlaylistCommand { get; }
+
+        public MusicViewModel()
+        {
+            CreatePlaylistCommand = new RelayCommand(
+                _ => CreatePlaylistAsync(),
+                _ => !string.IsNullOrWhiteSpace(NewPlaylistName)
+            );
+
+            AddTrackToPlaylistCommand = new RelayCommand(
+                _ => AddTrackToPlaylistAsync(),
+                _ => SelectedPlaylist != null && SelectedLibraryTrack != null
+            );
+
+        }
 
 
         private Playlist? _selectedPlaylist;
-
         public Playlist? SelectedPlaylist
         {
             get => _selectedPlaylist;
@@ -37,6 +53,20 @@ namespace MusicLibrary.ViewModels
                 }
             }
         }
+
+        private string _newPlaylistName = string.Empty;
+        public string NewPlaylistName
+        {
+            get => _newPlaylistName;
+            set
+            {
+                _newPlaylistName = value;
+                OnPropertyChanged(nameof(NewPlaylistName));
+
+                CreatePlaylistCommand?.RaiseCanExecuteChanged();
+            }
+        }
+
 
 
         public async Task LoadDataAsync()
@@ -70,6 +100,38 @@ namespace MusicLibrary.ViewModels
                 Tracks.Add(t);
 
             OnPropertyChanged(nameof(Tracks));
+        }
+
+        private async void CreatePlaylistAsync()
+        {
+            var playlist = await _service.CreatePlaylistAsync(NewPlaylistName);
+
+            Playlists.Add(playlist);
+            SelectedPlaylist = playlist;
+
+            NewPlaylistName = string.Empty;
+        }
+
+        private Track? _selectedLibraryTrack;
+        public Track? SelectedLibraryTrack
+        {
+            get => _selectedLibraryTrack;
+            set
+            {
+                _selectedLibraryTrack = value;
+                OnPropertyChanged(nameof(SelectedLibraryTrack));
+                AddTrackToPlaylistCommand?.RaiseCanExecuteChanged();
+            }
+        }
+
+        private async void AddTrackToPlaylistAsync()
+        {
+            await _service.AddTrackToPlaylistAsync(
+                SelectedPlaylist!.PlaylistId,
+                SelectedLibraryTrack!.TrackId
+            );
+
+            await LoadTracksForSelectedPlaylistAsync();
         }
 
     }

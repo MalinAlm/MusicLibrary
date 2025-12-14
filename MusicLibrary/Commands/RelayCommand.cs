@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace MusicLibrary.Commands
 {
-    class RelayCommand : ICommand
+    public class RelayCommand : ICommand
     {
 
             private readonly Action<object?> execute;

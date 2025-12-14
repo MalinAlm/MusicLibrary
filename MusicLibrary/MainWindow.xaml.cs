@@ -49,4 +49,15 @@ public partial class MainWindow : Window
          myTreeView.ItemsSource = new ObservableCollection<Artist>(artists);
     }
 
+    private void TreeView_SelectedItemChanged(
+    object sender,
+    RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (DataContext is MusicViewModel vm &&
+            e.NewValue is Track track)
+        {
+            vm.SelectedLibraryTrack = track;
+        }
+    }
+
 }

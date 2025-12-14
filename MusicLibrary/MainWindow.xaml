@@ -14,18 +14,32 @@
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <StackPanel Grid.Row="0"
+                Orientation="Horizontal"
+                Margin="5">
+
+            <TextBox Width="150"
+                 Margin="0,0,5,0"
+                 Text="{Binding NewPlaylistName, UpdateSourceTrigger=PropertyChanged}" />
+
+            <Button Content="Skapa playlist"
+                Command="{Binding CreatePlaylistCommand}" />
+        </StackPanel>
+
         <ComboBox 
-              Grid.Row="0"
+              Grid.Row="1"
               Grid.Column="0"
               ItemsSource="{Binding Playlists}"
               SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}"
               DisplayMemberPath="Name"
               Margin="5"/>
 
-        <TreeView x:Name="myTreeView" Grid.Row="1" Grid.Column="0">
+        <TreeView x:Name="myTreeView" Grid.Row="2" Grid.Column="0" SelectedItemChanged="TreeView_SelectedItemChanged">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
                     <TextBlock>
@@ -42,6 +56,12 @@
                 </HierarchicalDataTemplate>
             </TreeView.Resources>
         </TreeView>
+
+        <Button 
+            Grid.Row="3"
+              Content="Lägg till i playlist"
+              Margin="5"
+              Command="{Binding AddTrackToPlaylistCommand}" />
 
         <DataGrid x:Name="myDataGrid" 
                   Grid.Column="1"
