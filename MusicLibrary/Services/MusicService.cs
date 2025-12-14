@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MusicLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MusicLibrary.Services
 {
-    class MusicService
+    public class MusicService
     {
         public async Task<List<Playlist>> GetPlaylistsAsync()
         {

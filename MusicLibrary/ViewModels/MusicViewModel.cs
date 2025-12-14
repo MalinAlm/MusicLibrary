@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MusicLibrary.ViewModels
 {
-    class MusicViewModel
+    public class MusicViewModel
     {
 
         private readonly MusicService _service = new();
