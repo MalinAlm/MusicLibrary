@@ -25,6 +25,7 @@ namespace MusicLibrary.ViewModels
         public RelayCommand RemoveTrackFromPlaylistCommand { get; }
 
 
+
         public MusicViewModel()
         {
             CreatePlaylistCommand = new RelayCommand(
@@ -127,6 +128,7 @@ namespace MusicLibrary.ViewModels
                 RemoveTrackFromPlaylistCommand?.RaiseCanExecuteChanged();
             }
         }
+
 
         public async Task LoadDataAsync()
         {
@@ -237,6 +239,10 @@ namespace MusicLibrary.ViewModels
         {
             if (SelectedPlaylist == null || SelectedPlaylistTrack == null)
                 return;
+            await _service.RemoveTrackFromPlaylistAsync(
+                SelectedPlaylist.PlaylistId,
+                SelectedPlaylistTrack.TrackId
+            );
 
             await _service.RemoveTrackFromPlaylistAsync(
              SelectedPlaylist.PlaylistId,
