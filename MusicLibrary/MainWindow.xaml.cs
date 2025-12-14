@@ -23,17 +23,17 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-       
+
+        DataContext = _vm;
 
         Loaded += MainWindow_Loaded;
     }
 
-    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-      
-        LoadTracks();
+        await _vm.LoadDataAsync();
         LoadArtists();
-
+       
     }
 
     private  void LoadArtists()
@@ -47,23 +47,6 @@ public partial class MainWindow : Window
             .ToList();
 
          myTreeView.ItemsSource = new ObservableCollection<Artist>(artists);
-    }
-
-    private  void LoadTracks()
-    {
-        using var db = new MusicContext();
-
-        var tracks = db.Tracks
-            .Take(10)
-            .Include(t => t.Album)
-            .Select(t => new { Name = t.Name, AlbumName = t.Album.Title, Length = TimeSpan.FromMilliseconds(t.Milliseconds).ToString(@"mm\:ss") })
-            .ToList();
-
-        var collection = new ObservableCollection<object>(tracks);
-
-         myDataGrid.ItemsSource = collection;
-
-       
     }
 
 }

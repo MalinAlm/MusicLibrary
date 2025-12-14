@@ -12,7 +12,20 @@
             <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
 
-        <TreeView x:Name="myTreeView" >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ComboBox 
+              Grid.Row="0"
+              Grid.Column="0"
+              ItemsSource="{Binding Playlists}"
+              SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}"
+              DisplayMemberPath="Name"
+              Margin="5"/>
+
+        <TreeView x:Name="myTreeView" Grid.Row="1" Grid.Column="0">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
                     <TextBlock>
@@ -47,11 +60,17 @@
                   AlternationCount="2"
                   RowBackground="White"
                   AlternatingRowBackground="NavajoWhite"
+                  ItemsSource="{Binding Tracks}"
         >
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Track Name" Width="*" Binding="{Binding Name}" />
-                <DataGridTextColumn Header="Album" Width="*" Binding="{Binding AlbumName}" />
-                <DataGridTextColumn Header="Length" Width="100" Binding="{Binding Length}" />
+                <DataGridTextColumn Header="Track"
+                            Binding="{Binding Name}" FontStyle="Italic"/>
+
+                <DataGridTextColumn Header="Album"
+                            Binding="{Binding Album.Title}" />
+
+                <DataGridTextColumn Header="Length (ms)"
+                            Binding="{Binding Milliseconds}" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>
