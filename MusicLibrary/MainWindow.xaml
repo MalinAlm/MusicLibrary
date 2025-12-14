@@ -127,8 +127,31 @@
                   ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"
                   IsEnabled="{Binding IsLoading,
                               Converter={StaticResource InverseBoolConverter}}"
+                  SelectedItem="{Binding SelectedPlaylistTrack, Mode=TwoWay}"
+                      
+                      
         >
-            <DataGrid.Columns>
+                <DataGrid.RowHeaderStyle>
+                    <Style TargetType="DataGridRowHeader">
+                        <Setter Property="Content" Value="🗑"/>
+                        <Setter Property="ToolTip" Value="Ta bort låt från playlist"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="Foreground" Value="DarkRed"/>
+                        <Setter Property="Padding" Value="5"/>
+                        <EventSetter Event="PreviewMouseLeftButtonDown"
+                     Handler="RowHeader_DeleteClicked"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="Red"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowHeaderStyle>
+
+
+
+                <DataGrid.Columns>
                 <DataGridTextColumn Header="Track"
                             Binding="{Binding Name}" FontStyle="Italic"/>
 
@@ -139,6 +162,8 @@
                             Binding="{Binding Milliseconds}" />
             </DataGrid.Columns>
         </DataGrid>
+         
+
         </Grid>
     </Grid>
 </Window>
