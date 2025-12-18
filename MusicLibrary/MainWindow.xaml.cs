@@ -27,6 +27,8 @@ public partial class MainWindow : Window
 
         DataContext = _vm;
 
+        _vm.ArtistsChanged = ReloadArtists;
+
         Loaded += MainWindow_Loaded;
     }
 
@@ -49,6 +51,12 @@ public partial class MainWindow : Window
 
          myTreeView.ItemsSource = new ObservableCollection<Artist>(artists);
     }
+
+    public void ReloadArtists()
+    {
+        LoadArtists();
+    }
+
 
     private void TreeView_SelectedItemChanged(
     object sender,

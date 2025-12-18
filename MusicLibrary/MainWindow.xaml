@@ -22,16 +22,19 @@
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <!-- skapa playlist -->
+                <!-- skapa -->
                 <RowDefinition Height="Auto"/>
-                <!-- välj playlist -->
+                <!-- välj -->
                 <RowDefinition Height="Auto"/>
-                <!-- ändra namn -->
+                <!-- ändra -->
+                <RowDefinition Height="Auto"/>
+                <!-- lägg till -->
+                <RowDefinition Height="Auto"/>
+                <!-- ta bort -->
                 <RowDefinition Height="*"/>
                 <!-- TreeView -->
-                <RowDefinition Height="Auto"/>
-                <!-- lägg till-knapp -->
             </Grid.RowDefinitions>
+
 
             <StackPanel 
             Grid.Row="0"
@@ -68,10 +71,20 @@
             Command="{Binding UpdatePlaylistCommand}" />
             </StackPanel>
 
+            <Button 
+                Grid.Row="3"
+                Content="Lägg till i playlist"
+                Margin="5"
+                Command="{Binding AddTrackToPlaylistCommand}" />
+
+            <Button 
+                Grid.Row="4"
+                Content="Ta bort playlist"
+                Margin="5"
+                Command="{Binding DeletePlaylistCommand}" />
 
 
-
-            <TreeView x:Name="myTreeView" Grid.Row="4" Grid.Column="0" SelectedItemChanged="TreeView_SelectedItemChanged">
+            <TreeView x:Name="myTreeView" Grid.Row="5" Grid.Column="0" SelectedItemChanged="TreeView_SelectedItemChanged">
                 <TreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
                         <TextBlock>
@@ -89,18 +102,33 @@
                 </TreeView.Resources>
             </TreeView>
 
-            <Button 
-            Grid.Row="3"
-              Content="Lägg till i playlist"
-              Margin="5"
-              Command="{Binding AddTrackToPlaylistCommand}" />
+            <GroupBox Header="Artist" Margin="5">
+                <StackPanel>
+
+                    <TextBox Text="{Binding NewArtistName, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Content="Ny artist"
+                Command="{Binding CreateArtistCommand}" />
+
+                    <TextBox Text="{Binding EditArtistName, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,5,0,0"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Spara"
+                    Command="{Binding UpdateArtistCommand}" />
+                        <Button Content="Ta bort"
+                    Margin="5,0,0,0"
+                    Command="{Binding DeleteArtistCommand}" />
+                    </StackPanel>
+
+                </StackPanel>
+            </GroupBox>
 
         </Grid>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <!-- loading text -->
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="500"/>
+                <RowDefinition Height="400"/>
 
                 <!-- DataGrid -->
             </Grid.RowDefinitions>
