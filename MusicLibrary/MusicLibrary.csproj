@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Folder Include="Dialogs\" />
-    <Folder Include="Views\" />
   </ItemGroup>
 
 </Project>

@@ -1,45 +1,39 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MusicLibrary;
 using MusicLibrary.ViewModels;
+using MusicLibrary.Views;
 using System.Collections.ObjectModel;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MusicLibrary;
 
 public partial class MainWindow : Window
 {
-
     private MusicViewModel _vm = new MusicViewModel();
 
     public MainWindow()
     {
         InitializeComponent();
-
         DataContext = _vm;
-
-        _vm.ArtistsChanged = ReloadArtists;
-
         Loaded += MainWindow_Loaded;
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        await _vm.LoadDataAsync();
-        LoadArtists();
-       
+        await RefreshAllAsync();
     }
 
-    private  void LoadArtists()
+    private async Task RefreshAllAsync()
+    {
+        await _vm.LoadDataAsync();    // playlists
+        await _vm.LoadLibraryAsync(); // library tracks
+        LoadArtists();                // treeview
+    }
+
+    // --- TreeView load (som ni redan har) ---
+    private void LoadArtists()
     {
         using var db = new MusicContext();
 
@@ -49,35 +43,26 @@ public partial class MainWindow : Window
             .ThenInclude(album => album.Tracks)
             .ToList();
 
-         myTreeView.ItemsSource = new ObservableCollection<Artist>(artists);
+        myTreeView.ItemsSource = new ObservableCollection<Artist>(artists);
     }
 
-    public void ReloadArtists()
+    private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
-        LoadArtists();
+        if (DataContext is MusicViewModel vm && e.NewValue is Track track)
+        {
+            vm.SelectedLibraryTrack = track;
+        }
     }
 
-
-    private void TreeView_SelectedItemChanged(
-    object sender,
-    RoutedPropertyChangedEventArgs<object> e)
-{
-    if (DataContext is MusicViewModel vm &&
-        e.NewValue is Track track)
-    {
-        vm.SelectedLibraryTrack = track;
-    }
-}
     private async void DataGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         if (e.VerticalOffset + e.ViewportHeight >= e.ExtentHeight - 20)
         {
             if (DataContext is MusicViewModel vm)
-            {
                 await vm.LoadMoreTracksAsync();
-            }
         }
     }
+
     private void RowHeader_DeleteClicked(object sender, MouseButtonEventArgs e)
     {
         if (sender is DataGridRowHeader header &&
@@ -85,13 +70,44 @@ public partial class MainWindow : Window
             DataContext is MusicViewModel vm)
         {
             vm.SelectedPlaylistTrack = track;
-
             if (vm.RemoveTrackFromPlaylistCommand.CanExecute(null))
-            {
                 vm.RemoveTrackFromPlaylistCommand.Execute(null);
-            }
         }
     }
+//Meny
+    private async Task OpenDialogAndRefreshAsync(CrudMode mode, EntityType entity)
+    {
+        var dlg = new EditDialog(mode, entity) { Owner = this };
+        var result = dlg.ShowDialog();
 
+        if (result == true)
+            await RefreshAllAsync();
+    }
 
+    private async void AddPlaylist_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Playlist);
+
+    private async void UpdatePlaylist_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Playlist);
+
+    private async void DeletePlaylist_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Playlist);
+
+    private async void AddArtist_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Artist);
+
+    private async void UpdateArtist_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Artist);
+
+    private async void DeleteArtist_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Artist);
+
+    private async void AddTrack_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Track);
+
+    private async void UpdateTrack_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Track);
+
+    private async void DeleteTrack_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Track);
 }

@@ -15,7 +15,75 @@ namespace MusicLibrary.Services
                            .ToListAsync();
         }
 
-         
+        public async Task<Track> CreateTrackAsync(
+            string name,
+            int milliseconds,
+            int mediaTypeId,
+            int? albumId,
+            int? genreId,
+            string? composer)
+        {
+            using var db = new MusicContext();
+
+            var nextId = await db.Tracks.MaxAsync(t => t.TrackId) + 1;
+
+            var track = new Track
+            {
+                TrackId = nextId,
+                Name = name,
+                Milliseconds = milliseconds,
+                MediaTypeId = mediaTypeId,
+                AlbumId = albumId,
+                GenreId = genreId,
+                Composer = composer
+            };
+
+            db.Tracks.Add(track);
+            await db.SaveChangesAsync();
+            return track;
+        }
+
+        public async Task UpdateTrackAsync(
+            int trackId,
+            string name,
+            int milliseconds,
+            int mediaTypeId,
+            int? albumId,
+            int? genreId,
+            string? composer)
+        {
+            using var db = new MusicContext();
+
+            var track = await db.Tracks.FindAsync(trackId);
+            if (track == null) return;
+
+            track.Name = name;
+            track.Milliseconds = milliseconds;
+            track.MediaTypeId = mediaTypeId;
+            track.AlbumId = albumId;
+            track.GenreId = genreId;
+            track.Composer = composer;
+
+            await db.SaveChangesAsync();
+        }
+
+        public async Task DeleteTrackAsync(int trackId)
+        {
+            using var db = new MusicContext();
+
+            await db.Database.ExecuteSqlRawAsync(
+                "DELETE FROM music.playlist_track WHERE TrackId = @p0",
+                trackId
+            );
+
+            var track = await db.Tracks.FirstOrDefaultAsync(t => t.TrackId == trackId);
+            if (track == null) return;
+
+            db.Tracks.Remove(track);
+            await db.SaveChangesAsync();
+        }
+
+
         public async Task<List<Album>> GetAlbumsAsync()
         {
             using var db = new MusicContext();
@@ -25,7 +93,7 @@ namespace MusicLibrary.Services
                            .ToListAsync();
         }
 
-       
+
         public async Task<List<Artist>> GetArtistsAsync()
         {
             using var db = new MusicContext();
@@ -38,25 +106,17 @@ namespace MusicLibrary.Services
         public async Task<Artist> CreateArtistAsync(string name)
         {
             using var db = new MusicContext();
-
             var nextId = await db.Artists.MaxAsync(a => a.ArtistId) + 1;
 
-            var artist = new Artist
-            {
-                ArtistId = nextId,
-                Name = name
-            };
-
+            var artist = new Artist { ArtistId = nextId, Name = name };
             db.Artists.Add(artist);
             await db.SaveChangesAsync();
-
             return artist;
         }
 
         public async Task UpdateArtistAsync(int artistId, string newName)
         {
             using var db = new MusicContext();
-
             var artist = await db.Artists.FindAsync(artistId);
             if (artist == null) return;
 
@@ -75,7 +135,7 @@ namespace MusicLibrary.Services
             if (artist == null) return;
 
             if (artist.Albums.Any())
-                throw new InvalidOperationException("Artisten har album kopplade.");
+                throw new InvalidOperationException("Artisten har album kopplade och kan inte tas bort.");
 
             db.Artists.Remove(artist);
             await db.SaveChangesAsync();
@@ -189,14 +249,11 @@ namespace MusicLibrary.Services
                 playlistId
             );
 
-            var playlist = await db.Playlists
-                .FirstOrDefaultAsync(p => p.PlaylistId == playlistId);
+            var playlist = await db.Playlists.FirstOrDefaultAsync(p => p.PlaylistId == playlistId);
+            if (playlist == null) return;
 
-            if (playlist != null)
-            {
-                db.Playlists.Remove(playlist);
-                await db.SaveChangesAsync();
-            }
+            db.Playlists.Remove(playlist);
+            await db.SaveChangesAsync();
         }
 
 

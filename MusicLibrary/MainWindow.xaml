@@ -6,192 +6,149 @@
         xmlns:model="clr-namespace:MusicLibrary"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="2*" />
-        </Grid.ColumnDefinitions>
 
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <!-- Menu -->
             <RowDefinition Height="*"/>
+            <!-- Content -->
         </Grid.RowDefinitions>
 
-        <Grid Grid.Column="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <!-- skapa -->
-                <RowDefinition Height="Auto"/>
-                <!-- välj -->
-                <RowDefinition Height="Auto"/>
-                <!-- ändra -->
-                <RowDefinition Height="Auto"/>
-                <!-- lägg till -->
-                <RowDefinition Height="Auto"/>
-                <!-- ta bort -->
-                <RowDefinition Height="*"/>
-                <!-- TreeView -->
-            </Grid.RowDefinitions>
+        <!-- MENU -->
+        <Menu Grid.Row="0">
+            <MenuItem Header="_Edit">
 
+                <MenuItem Header="Add">
+                    <MenuItem Header="Playlist" Click="AddPlaylist_Click"/>
+                    <MenuItem Header="Artist" Click="AddArtist_Click"/>
+                    <MenuItem Header="Track" Click="AddTrack_Click"/>
+                </MenuItem>
 
-            <StackPanel 
-            Grid.Row="0"
-            Orientation="Horizontal"
-            Margin="5"
-            Height="20">
+                <MenuItem Header="Update">
+                    <MenuItem Header="Playlist" Click="UpdatePlaylist_Click"/>
+                    <MenuItem Header="Artist" Click="UpdateArtist_Click"/>
+                    <MenuItem Header="Track" Click="UpdateTrack_Click"/>
+                </MenuItem>
 
-                <TextBox Width="150"
-                 Margin="0,0,5,0"
-                 Text="{Binding NewPlaylistName, UpdateSourceTrigger=PropertyChanged}" />
+                <MenuItem Header="Delete">
+                    <MenuItem Header="Playlist" Click="DeletePlaylist_Click"/>
+                    <MenuItem Header="Artist" Click="DeleteArtist_Click"/>
+                    <MenuItem Header="Track" Click="DeleteTrack_Click"/>
+                </MenuItem>
 
-                <Button Content="Skapa playlist"
-                Command="{Binding CreatePlaylistCommand}" />
-            </StackPanel>
+            </MenuItem>
+        </Menu>
 
-            <ComboBox 
-              Grid.Row="1"
-              Grid.Column="0"
-              ItemsSource="{Binding Playlists}"
-              SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}"
-              DisplayMemberPath="Name"
-              Margin="5"/>
+        <!-- CONTENT -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Row="2" 
-                    Orientation="Horizontal"
-            Margin="5">
+            <!-- LEFT -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                <TextBox Width="150"
-             Margin="0,0,5,0"
-             Text="{Binding EditPlaylistName, UpdateSourceTrigger=PropertyChanged}" />
+                <TreeView x:Name="myTreeView"
+                          SelectedItemChanged="TreeView_SelectedItemChanged">
+                    <TreeView.Resources>
+                        <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
+                            <TextBlock>
+                                <Run Text="{Binding Name}" />
+                                <Run Text=" (" /><Run Text="{Binding Albums.Count, Mode=OneWay}" />
+                                <Run Text=" albums)" />
+                            </TextBlock>
+                        </HierarchicalDataTemplate>
+                        <HierarchicalDataTemplate DataType="{x:Type model:Album}" ItemsSource="{Binding Tracks}">
+                            <TextBlock Text="{Binding Title}" />
+                        </HierarchicalDataTemplate>
+                        <HierarchicalDataTemplate DataType="{x:Type model:Track}">
+                            <TextBlock Text="{Binding Name}" />
+                        </HierarchicalDataTemplate>
+                    </TreeView.Resources>
+                </TreeView>
+            </Grid>
 
-                <Button Content="Spara namn"
-            Margin="5,0,0,0"
-            Command="{Binding UpdatePlaylistCommand}" />
-            </StackPanel>
+            <!-- MIDDLE: PLAYLISTS -->
+            <Border Grid.Column="1"
+        BorderBrush="LightGray"
+        BorderThickness="1"
+        Margin="5">
 
-            <Button 
-                Grid.Row="3"
-                Content="Lägg till i playlist"
-                Margin="5"
-                Command="{Binding AddTrackToPlaylistCommand}" />
+                <DockPanel>
+                    <TextBlock Text="Playlists"
+                   FontWeight="Bold"
+                   Padding="5"
+                   DockPanel.Dock="Top"/>
 
-            <Button 
-                Grid.Row="4"
-                Content="Ta bort playlist"
-                Margin="5"
-                Command="{Binding DeletePlaylistCommand}" />
+                    <ListBox ItemsSource="{Binding Playlists}"
+                 SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}"
+                 DisplayMemberPath="Name"
+                 Margin="5"/>
+                </DockPanel>
 
+            </Border>
 
-            <TreeView x:Name="myTreeView" Grid.Row="5" Grid.Column="0" SelectedItemChanged="TreeView_SelectedItemChanged">
-                <TreeView.Resources>
-                    <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
-                        <TextBlock>
-                        <Run Text="{Binding Name}" />
-                        <Run Text="(" /><Run Text="{Binding Albums.Count, Mode=OneWay}" />
-                        <Run Text="albums)" />
-                        </TextBlock>
-                    </HierarchicalDataTemplate>
-                    <HierarchicalDataTemplate DataType="{x:Type model:Album}" ItemsSource="{Binding Tracks}">
-                        <TextBlock Text="{Binding Title}" />
-                    </HierarchicalDataTemplate>
-                    <HierarchicalDataTemplate DataType="{x:Type model:Track}">
-                        <TextBlock Text="{Binding Name}" />
-                    </HierarchicalDataTemplate>
-                </TreeView.Resources>
-            </TreeView>
+            <!-- RIGHT -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <GroupBox Header="Artist" Margin="5">
-                <StackPanel>
+                <DataGrid x:Name="myDataGrid"
+                          Grid.Row="1"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          CanUserResizeColumns="False"
+                          CanUserResizeRows="False"
+                          CanUserReorderColumns="False"
+                          CanUserSortColumns="True"
+                          SelectionMode="Extended"
+                          SelectionUnit="CellOrRowHeader"
+                          RowHeaderWidth="20"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto"
+                          AlternationCount="2"
+                          RowBackground="White"
+                          AlternatingRowBackground="NavajoWhite"
+                          ItemsSource="{Binding Tracks}"
+                          ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"
+                          IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
+                          SelectedItem="{Binding SelectedPlaylistTrack, Mode=TwoWay}">
 
-                    <TextBox Text="{Binding NewArtistName, UpdateSourceTrigger=PropertyChanged}" />
-                    <Button Content="Ny artist"
-                Command="{Binding CreateArtistCommand}" />
+                    <DataGrid.RowHeaderStyle>
+                        <Style TargetType="DataGridRowHeader">
+                            <Setter Property="Content" Value="🗑"/>
+                            <Setter Property="ToolTip" Value="Ta bort låt från playlist"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Foreground" Value="DarkRed"/>
+                            <Setter Property="Padding" Value="5"/>
+                            <EventSetter Event="PreviewMouseLeftButtonDown"
+                                         Handler="RowHeader_DeleteClicked"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="Red"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowHeaderStyle>
 
-                    <TextBox Text="{Binding EditArtistName, UpdateSourceTrigger=PropertyChanged}"
-                 Margin="0,5,0,0"/>
-
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Spara"
-                    Command="{Binding UpdateArtistCommand}" />
-                        <Button Content="Ta bort"
-                    Margin="5,0,0,0"
-                    Command="{Binding DeleteArtistCommand}" />
-                    </StackPanel>
-
-                </StackPanel>
-            </GroupBox>
-
-        </Grid>
-        <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <!-- loading text -->
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="400"/>
-
-                <!-- DataGrid -->
-            </Grid.RowDefinitions>
-
-            <DataGrid x:Name="myDataGrid" 
-                  Grid.Row="1"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  CanUserResizeColumns="False"
-                  CanUserResizeRows="False"
-                  CanUserReorderColumns="False"
-                  CanUserSortColumns="True"
-                  SelectionMode="Extended"
-                  SelectionUnit="CellOrRowHeader"
-                  RowHeaderWidth="20"
-                  HorizontalScrollBarVisibility="Auto"
-                  VerticalScrollBarVisibility="Auto"
-                  AlternationCount="2"
-                  RowBackground="White"
-                  AlternatingRowBackground="NavajoWhite"
-                  ItemsSource="{Binding Tracks}"
-                  ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"
-                  IsEnabled="{Binding IsLoading,
-                              Converter={StaticResource InverseBoolConverter}}"
-                  SelectedItem="{Binding SelectedPlaylistTrack, Mode=TwoWay}"
-                      
-                      
-        >
-                <DataGrid.RowHeaderStyle>
-                    <Style TargetType="DataGridRowHeader">
-                        <Setter Property="Content" Value="🗑"/>
-                        <Setter Property="ToolTip" Value="Ta bort låt från playlist"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                        <Setter Property="Cursor" Value="Hand"/>
-                        <Setter Property="Foreground" Value="DarkRed"/>
-                        <Setter Property="Padding" Value="5"/>
-                        <EventSetter Event="PreviewMouseLeftButtonDown"
-                     Handler="RowHeader_DeleteClicked"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="Red"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.RowHeaderStyle>
-
-
-
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Track"
-                            Binding="{Binding Name}" FontStyle="Italic"/>
-
-                    <DataGridTextColumn Header="Album"
-                            Binding="{Binding Album.Title}" />
-
-                    <DataGridTextColumn Header="Length (ms)"
-                            Binding="{Binding Milliseconds}" />
-                </DataGrid.Columns>
-            </DataGrid>
-
-
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Track" Binding="{Binding Name}" FontStyle="Italic"/>
+                        <DataGridTextColumn Header="Album" Binding="{Binding Album.Title}"/>
+                        <DataGridTextColumn Header="Length (ms)" Binding="{Binding Milliseconds}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
