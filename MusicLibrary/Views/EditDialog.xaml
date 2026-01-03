@@ -1,71 +1,115 @@
 ﻿<Window x:Class="MusicLibrary.Views.EditDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:MusicLibrary.ViewModels"
+        xmlns:model="clr-namespace:MusicLibrary"
         Title="{Binding DialogTitle}"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
+
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Width="380">
+        <!-- TOP: selector + name + ev track fields -->
+        <StackPanel Grid.Row="0" Width="420">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- Välj befintlig (Update/Delete) -->
-            <StackPanel Margin="0,0,0,10" Visibility="{Binding ShowSelector, Converter={StaticResource BoolToVisibilityConverter}}">
-                <TextBlock Text="{Binding SelectorLabel}" Margin="0,0,0,4"/>
-                <ComboBox ItemsSource="{Binding SelectorItems}"
-                          SelectedItem="{Binding SelectedSelectorItem}"
-                          DisplayMemberPath="{Binding SelectorDisplayMember}"
-                          />
-            </StackPanel>
-
-            <!-- Name (Playlist/Artist/Track) -->
-            <StackPanel Margin="0,0,0,10" Visibility="{Binding ShowName, Converter={StaticResource BoolToVisibilityConverter}}">
-                <TextBlock Text="{Binding NameLabel}" Margin="0,0,0,4"/>
-                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
-            </StackPanel>
-
-            <!-- Track fields -->
-            <StackPanel Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}">
-                <StackPanel Margin="0,0,0,10">
-                    <TextBlock Text="Length (ms)" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding MillisecondsText, UpdateSourceTrigger=PropertyChanged}"/>
+                <!-- Välj befintlig (Update/Delete) -->
+                <StackPanel Grid.Row="0"
+                            Margin="0,0,0,10"
+                            Visibility="{Binding ShowSelector, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="{Binding SelectorLabel}" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding SelectorItems}"
+                              SelectedItem="{Binding SelectedSelectorItem}"
+                              DisplayMemberPath="Name"/>
                 </StackPanel>
 
-                <!--<StackPanel Margin="0,0,0,10">
-                    <TextBlock Text="Media Type" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding MediaTypes}"
-                              SelectedItem="{Binding SelectedMediaType}"
-                              DisplayMemberPath="Name"/>
-                </StackPanel>-->
-
-                <StackPanel Margin="0,0,0,10">
-                    <TextBlock Text="Album" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding Albums}"
-                              SelectedItem="{Binding SelectedAlbum}"
-                              DisplayMemberPath="Title"/>
+                <!-- Name (Playlist/Artist/Track) -->
+                <StackPanel Grid.Row="1"
+                            Margin="0,0,0,10"
+                            Visibility="{Binding ShowName, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="{Binding NameLabel}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <!--<StackPanel Margin="0,0,0,10">
-                    <TextBlock Text="Genre (optional)" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding Genres}"
-                              SelectedItem="{Binding SelectedGenre}"
-                              DisplayMemberPath="Name"/>
-                </StackPanel>-->
-
-                <!--<StackPanel Margin="0,0,0,10">
-                    <TextBlock Text="Composer (optional)" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding Composer, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>-->
-            </StackPanel>
-
-            <TextBlock Text="{Binding ErrorText}" Foreground="DarkRed" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                <TextBlock Grid.Row="3"
+                           Text="{Binding ErrorText}"
+                           Foreground="DarkRed"
+                           TextWrapping="Wrap"
+                           Margin="0,4,0,0"/>
+            </Grid>
         </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+        <!-- PLAYLIST UPDATE: manage tracks -->
+        <StackPanel Grid.Row="1"
+                    Margin="0,12,0,0"
+                    Visibility="{Binding IsUpdatePlaylist, Converter={StaticResource BoolToVisibilityConverter}}">
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Vänster: låtar i playlist -->
+                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                    <TextBlock Text="Tracks in playlist" FontWeight="Bold" Margin="0,0,0,6"/>
+
+                    <ListBox ItemsSource="{Binding PlaylistTracks}"
+                             SelectedItem="{Binding SelectedPlaylistTrack}"
+                             DisplayMemberPath="Name"
+                             Height="180"/>
+
+                    <Button Content="Remove selected"
+                            Margin="0,8,0,0"
+                            Command="{Binding RemoveTrackCommand}"/>
+                </StackPanel>
+
+                <!-- Höger: bibliotek (Album -> Tracks) -->
+                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                    <TextBlock Text="Search (album or track)" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding TrackSearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,0,0,8"/>
+
+                    <TreeView ItemsSource="{Binding LibraryAlbumsView}"
+                              SelectedItemChanged="LibraryTree_SelectedItemChanged"
+                              Height="180">
+                        <TreeView.Resources>
+
+                            <!-- Album -->
+                            <HierarchicalDataTemplate DataType="{x:Type vm:AlbumNodeViewModel}"
+                                                      ItemsSource="{Binding Tracks}">
+                                <TextBlock Text="{Binding Title}"/>
+                            </HierarchicalDataTemplate>
+
+                            <!-- Track -->
+                            <DataTemplate DataType="{x:Type model:Track}">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+
+                        </TreeView.Resources>
+                    </TreeView>
+
+                    <Button Content="Add selected"
+                            Margin="0,8,0,0"
+                            Command="{Binding AddTrackCommand}"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button Content="Cancel" Width="90" Margin="0,0,8,0" IsCancel="True"/>
             <Button Content="{Binding ConfirmLabel}" Width="90"
                     Command="{Binding ConfirmCommand}"
@@ -73,4 +117,3 @@
         </StackPanel>
     </Grid>
 </Window>
-
