@@ -26,6 +26,7 @@ public class EditDialogViewModel : BaseViewModel
     };
 
     public bool IsTrack => Entity == EntityType.Track;
+    public bool ShowMediaTypeSelector => Entity == EntityType.Track && Mode == CrudMode.Add;
     public bool IsUpdatePlaylist => Mode == CrudMode.Update && Entity == EntityType.Playlist;
 
     // ---- Selector (Update/Delete) ----
@@ -192,20 +193,26 @@ public class EditDialogViewModel : BaseViewModel
                 SelectorItems = new ArrayList(await _service.GetTracksAsync());
         }
 
-        // Track-dialogen behöver album-lista
         if (IsTrack)
         {
             Albums.Clear();
             foreach (var a in await _service.GetAlbumsAsync())
                 Albums.Add(a);
 
-            // Ladda mediatypes och välj en default (t.ex. första som finns)
-            var mediaTypes = await _service.GetMediaTypesAsync();
-            _defaultMediaTypeId = mediaTypes.FirstOrDefault()?.MediaTypeId;
+            MediaTypes.Clear();
+            foreach (var mt in await _service.GetMediaTypesAsync())
+                MediaTypes.Add(mt);
 
-            if (_defaultMediaTypeId == null)
+            if (MediaTypes.Count == 0)
                 ErrorText = "No MediaTypes found in database.";
         }
+
+        var mediaTypes = await _service.GetMediaTypesAsync();
+        _defaultMediaTypeId = mediaTypes.FirstOrDefault()?.MediaTypeId;
+
+        if (_defaultMediaTypeId == null)
+            ErrorText = "No MediaTypes found in database.";
+
     }
 
     private void PrefillFromSelected()
@@ -241,6 +248,8 @@ public class EditDialogViewModel : BaseViewModel
             MillisecondsText = track.Milliseconds.ToString();
 
             SelectedAlbum = Albums.FirstOrDefault(x => x.AlbumId == track.AlbumId);
+
+            SelectedMediaType = MediaTypes.FirstOrDefault(x => x.MediaTypeId == track.MediaTypeId);
         }
     }
 
@@ -325,15 +334,14 @@ public class EditDialogViewModel : BaseViewModel
     }
 
     // ---- Track CRUD (enklare: name + ms + album) ----
-    // OBS: ni hade tidigare MediaType/Genre/Composer. Här behåller vi bara det som UI:t visar just nu.
     private async Task DoTrackAsync()
     {
         if (Mode == CrudMode.Delete)
         {
-            if (SelectedSelectorItem is not Track t)
+            if (SelectedSelectorItem is not Track track)
                 throw new InvalidOperationException("Select a track.");
 
-            await _service.DeleteTrackAsync(t.TrackId);
+            await _service.DeleteTrackAsync(track.TrackId);
             return;
         }
 
@@ -342,40 +350,42 @@ public class EditDialogViewModel : BaseViewModel
 
         if (!int.TryParse(MillisecondsText, out var ms) || ms < 0)
             throw new InvalidOperationException("Length (ms) must be a non-negative number.");
-        if (_defaultMediaTypeId == null)
-            throw new InvalidOperationException("No MediaType available in DB (cannot save track).");
-
-        var mediaTypeId = _defaultMediaTypeId.Value;
 
         var albumId = SelectedAlbum?.AlbumId;
+        var genreId = (int?)null;
 
         if (Mode == CrudMode.Add)
         {
+            if (_defaultMediaTypeId == null)
+                throw new InvalidOperationException("No MediaType available in DB (cannot add track).");
+
             await _service.CreateTrackAsync(
                 Name,
                 ms,
-                mediaTypeId,
+                _defaultMediaTypeId.Value,
                 albumId,
-                genreId: null,
+                genreId,
                 composer: null
             );
         }
         else // Update
         {
-            if (SelectedSelectorItem is not Track t)
+            if (SelectedSelectorItem is not Track track)
                 throw new InvalidOperationException("Select a track.");
 
             await _service.UpdateTrackAsync(
-                t.TrackId,
+                track.TrackId,
                 Name,
                 ms,
-                mediaTypeId,
+                track.MediaTypeId,
                 albumId,
-                genreId: null,
+                genreId,
                 composer: null
             );
         }
     }
+
+
 
 
     // ---- Bibliotek: ladda album->tracks + filter (album + track) ----
@@ -383,7 +393,7 @@ public class EditDialogViewModel : BaseViewModel
     {
         if (LibraryAlbums.Count > 0) return;
 
-        var tracks = await _service.GetTracksAsync(); // inkluderar Album + Artist i er service
+        var tracks = await _service.GetTracksAsync(); 
 
         LibraryAlbums.Clear();
 
