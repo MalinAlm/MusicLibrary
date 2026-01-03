@@ -43,6 +43,25 @@
                     <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
+                <!-- Track fields (syns bara när Entity == Track) -->
+                <StackPanel Grid.Row="2"
+                 Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}">
+
+                    <StackPanel Margin="0,0,0,10">
+                        <TextBlock Text="Length (ms)" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding MillisecondsText, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+
+                    <!-- Valfritt: om ni vill kunna sätta album också -->
+                    <StackPanel Margin="0,0,0,10">
+                        <TextBlock Text="Album (optional)" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding Albums}"
+                  SelectedItem="{Binding SelectedAlbum}"
+                  DisplayMemberPath="Title"/>
+                    </StackPanel>
+
+                </StackPanel>
+
                 <TextBlock Grid.Row="3"
                            Text="{Binding ErrorText}"
                            Foreground="DarkRed"

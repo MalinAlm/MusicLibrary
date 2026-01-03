@@ -11,6 +11,7 @@ namespace MusicLibrary.ViewModels;
 public class EditDialogViewModel : BaseViewModel
 {
     private readonly MusicService _service = new();
+    private int? _defaultMediaTypeId;
     private readonly Window _owner;
 
     public CrudMode Mode { get; }
@@ -89,6 +90,16 @@ public class EditDialogViewModel : BaseViewModel
         get => _selectedAlbum;
         set { _selectedAlbum = value; RaisePropertyChanged(); }
     }
+
+    public ObservableCollection<MediaType> MediaTypes { get; } = new();
+
+    private MediaType? _selectedMediaType;
+    public MediaType? SelectedMediaType
+    {
+        get => _selectedMediaType;
+        set { _selectedMediaType = value; RaisePropertyChanged(); }
+    }
+
 
     private string _errorText = "";
     public string ErrorText
@@ -187,6 +198,13 @@ public class EditDialogViewModel : BaseViewModel
             Albums.Clear();
             foreach (var a in await _service.GetAlbumsAsync())
                 Albums.Add(a);
+
+            // Ladda mediatypes och välj en default (t.ex. första som finns)
+            var mediaTypes = await _service.GetMediaTypesAsync();
+            _defaultMediaTypeId = mediaTypes.FirstOrDefault()?.MediaTypeId;
+
+            if (_defaultMediaTypeId == null)
+                ErrorText = "No MediaTypes found in database.";
         }
     }
 
@@ -216,6 +234,13 @@ public class EditDialogViewModel : BaseViewModel
             MillisecondsText = t.Milliseconds.ToString();
 
             SelectedAlbum = Albums.FirstOrDefault(x => x.AlbumId == t.AlbumId);
+        }
+        else if (Entity == EntityType.Track && SelectedSelectorItem is Track track)
+        {
+            Name = track.Name ?? "";
+            MillisecondsText = track.Milliseconds.ToString();
+
+            SelectedAlbum = Albums.FirstOrDefault(x => x.AlbumId == track.AlbumId);
         }
     }
 
@@ -317,25 +342,41 @@ public class EditDialogViewModel : BaseViewModel
 
         if (!int.TryParse(MillisecondsText, out var ms) || ms < 0)
             throw new InvalidOperationException("Length (ms) must be a non-negative number.");
+        if (_defaultMediaTypeId == null)
+            throw new InvalidOperationException("No MediaType available in DB (cannot save track).");
 
-        // Om ni vill kräva album: validera här.
+        var mediaTypeId = _defaultMediaTypeId.Value;
+
         var albumId = SelectedAlbum?.AlbumId;
 
         if (Mode == CrudMode.Add)
         {
-            // Ni behöver ett MediaTypeId i er service. Om ni vill återinföra MediaType i UI,
-            // säg till så bygger vi det. För stunden stoppar vi med tydligt fel:
-            throw new InvalidOperationException("Track Add kräver MediaTypeId. Lägg tillbaka MediaType i dialogen eller ändra service.");
+            await _service.CreateTrackAsync(
+                Name,
+                ms,
+                mediaTypeId,
+                albumId,
+                genreId: null,
+                composer: null
+            );
         }
         else // Update
         {
             if (SelectedSelectorItem is not Track t)
                 throw new InvalidOperationException("Select a track.");
 
-            // Samma här: service kräver MediaTypeId. Vi stoppar tydligt.
-            throw new InvalidOperationException("Track Update kräver MediaTypeId. Lägg tillbaka MediaType i dialogen eller ändra service.");
+            await _service.UpdateTrackAsync(
+                t.TrackId,
+                Name,
+                ms,
+                mediaTypeId,
+                albumId,
+                genreId: null,
+                composer: null
+            );
         }
     }
+
 
     // ---- Bibliotek: ladda album->tracks + filter (album + track) ----
     private async Task LoadLibraryAlbumsOnceAsync()

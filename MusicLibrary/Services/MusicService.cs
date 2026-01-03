@@ -161,6 +161,15 @@ namespace MusicLibrary.Services
                 .ToListAsync();
         }
 
+        public async Task<List<MediaType>> GetMediaTypesAsync()
+        {
+            using var db = new MusicContext();
+            return await db.MediaTypes
+                           .OrderBy(m => m.Name)
+                           .ToListAsync();
+        }
+
+
         public async Task<Playlist> CreatePlaylistAsync(string name)
         {
             using var db = new MusicContext();
