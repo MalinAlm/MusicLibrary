@@ -265,6 +265,31 @@ namespace MusicLibrary.Services
             await db.SaveChangesAsync();
         }
 
+        public async Task<List<Track>> GetTracksPageAsync(
+        int numberOfTracksToSkip,
+        int numberOfTracksToTake,
+        string? searchText = null)
+        {
+            using var db = new MusicContext();
+
+            IQueryable<Track> trackQuery = db.Tracks
+                .AsNoTracking()
+                .Include(track => track.Album)
+                    .ThenInclude(album => album.Artist);
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                string trimmedSearchText = searchText.Trim();
+                trackQuery = trackQuery.Where(track => track.Name.Contains(trimmedSearchText));
+            }
+
+            return await trackQuery
+                .OrderBy(track => track.TrackId)
+                .Skip(numberOfTracksToSkip)
+                .Take(numberOfTracksToTake)
+                .ToListAsync();
+        }
 
     }
+
 }

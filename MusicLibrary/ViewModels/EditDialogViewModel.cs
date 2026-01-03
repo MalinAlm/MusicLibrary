@@ -46,6 +46,53 @@ public class EditDialogViewModel : BaseViewModel
         set { _selectorItems = value; RaisePropertyChanged(); }
     }
 
+    // ---------- Paging för Track-selector (Update/Delete) ----------
+    private const int NumberOfTracksToLoadPerPage = 15;
+
+    private int numberOfTracksAlreadyLoaded = 0;
+    private bool moreTracksExistInDatabase = true;
+
+    private bool isCurrentlyLoadingMoreTracks;
+    public bool IsCurrentlyLoadingMoreTracks
+    {
+        get => isCurrentlyLoadingMoreTracks;
+        set { isCurrentlyLoadingMoreTracks = value; RaisePropertyChanged(); }
+    }
+
+    // Listan som visas i selector när Entity = Track
+    public ObservableCollection<Track> TracksAvailableToSelect { get; } = new();
+
+    private string trackSearchTextInSelector = "";
+    public string TrackSearchTextInSelector
+    {
+        get => trackSearchTextInSelector;
+        set
+        {
+            trackSearchTextInSelector = value;
+            RaisePropertyChanged();
+            _ = ResetSelectorAndLoadFirstPageAsync();
+        }
+    }
+
+    private string trackSearchTextUserIsTyping = "";
+    public string TrackSearchTextUserIsTyping
+    {
+        get => trackSearchTextUserIsTyping;
+        set { trackSearchTextUserIsTyping = value; RaisePropertyChanged(); }
+    }
+
+    private string? activeTrackSearchText = null;
+    private string? ActiveTrackSearchText
+    {
+        get => activeTrackSearchText;
+        set { activeTrackSearchText = value; }
+    }
+
+    public RelayCommand SearchTracksCommand { get; }
+    public RelayCommand ClearSearchCommand { get; }
+
+
+
     private object? _selectedSelectorItem;
     public object? SelectedSelectorItem
     {
@@ -165,6 +212,9 @@ public class EditDialogViewModel : BaseViewModel
         _owner = owner;
 
         ConfirmCommand = new RelayCommand(_ => ConfirmAsync());
+        SearchTracksCommand = new RelayCommand(async _ => await ApplySearchAndReloadAsync());
+        ClearSearchCommand = new RelayCommand(async _ => await ClearSearchAndReloadAsync());
+
 
         AddTrackCommand = new RelayCommand(async _ => await AddTrackToPlaylistAsync(),
             _ => IsUpdatePlaylist &&
@@ -177,6 +227,7 @@ public class EditDialogViewModel : BaseViewModel
                  SelectedPlaylistTrack != null);
 
         _ = LoadAsync();
+
     }
 
     private async Task LoadAsync()
@@ -186,12 +237,20 @@ public class EditDialogViewModel : BaseViewModel
         if (ShowSelector)
         {
             if (Entity == EntityType.Playlist)
+            {
                 SelectorItems = new ArrayList(await _service.GetPlaylistsAsync());
+            }
             else if (Entity == EntityType.Artist)
+            {
                 SelectorItems = new ArrayList(await _service.GetArtistsAsync());
-            else
-                SelectorItems = new ArrayList(await _service.GetTracksAsync());
+            }
+            else 
+            {
+                SelectorItems = TracksAvailableToSelect;
+                await ResetSelectorAndLoadFirstPageAsync();
+            }
         }
+
 
         if (IsTrack)
         {
@@ -235,22 +294,15 @@ public class EditDialogViewModel : BaseViewModel
         {
             Name = a.Name ?? "";
         }
-        else if (Entity == EntityType.Track && SelectedSelectorItem is Track t)
+        else if (Entity == EntityType.Track && SelectedSelectorItem is Track selectedTrack)
         {
-            Name = t.Name ?? "";
-            MillisecondsText = t.Milliseconds.ToString();
+            Name = selectedTrack.Name ?? "";
+            MillisecondsText = selectedTrack.Milliseconds.ToString();
 
-            SelectedAlbum = Albums.FirstOrDefault(x => x.AlbumId == t.AlbumId);
+            SelectedAlbum = Albums.FirstOrDefault(album => album.AlbumId == selectedTrack.AlbumId);
+            SelectedMediaType = MediaTypes.FirstOrDefault(mediaType => mediaType.MediaTypeId == selectedTrack.MediaTypeId);
         }
-        else if (Entity == EntityType.Track && SelectedSelectorItem is Track track)
-        {
-            Name = track.Name ?? "";
-            MillisecondsText = track.Milliseconds.ToString();
 
-            SelectedAlbum = Albums.FirstOrDefault(x => x.AlbumId == track.AlbumId);
-
-            SelectedMediaType = MediaTypes.FirstOrDefault(x => x.MediaTypeId == track.MediaTypeId);
-        }
     }
 
     private async void ConfirmAsync()
@@ -466,4 +518,72 @@ public class EditDialogViewModel : BaseViewModel
         await _service.RemoveTrackFromPlaylistAsync(p.PlaylistId, SelectedPlaylistTrack.TrackId);
         await ReloadPlaylistTracksAsync();
     }
+
+    private async Task ResetSelectorAndLoadFirstPageAsync()
+    {
+        numberOfTracksAlreadyLoaded = 0;
+        moreTracksExistInDatabase = true;
+
+        TracksAvailableToSelect.Clear();
+
+        await LoadNextTracksPageForSelectorAsync();
+    }
+
+    public async Task LoadNextTracksPageForSelectorAsync()
+    {
+        if (IsCurrentlyLoadingMoreTracks)
+            return;
+
+        if (!moreTracksExistInDatabase)
+            return;
+
+        try
+        {
+            IsCurrentlyLoadingMoreTracks = true;
+
+            List<Track> nextTracksPage = await _service.GetTracksPageAsync(
+                numberOfTracksToSkip: numberOfTracksAlreadyLoaded,
+                numberOfTracksToTake: NumberOfTracksToLoadPerPage,
+                searchText: ActiveTrackSearchText
+            );
+
+            foreach (Track track in nextTracksPage)
+                TracksAvailableToSelect.Add(track);
+
+            numberOfTracksAlreadyLoaded += nextTracksPage.Count;
+
+            if (nextTracksPage.Count < NumberOfTracksToLoadPerPage)
+                moreTracksExistInDatabase = false;
+
+            if (nextTracksPage.Count == 0)
+            {
+                moreTracksExistInDatabase = false;
+                return;
+            }
+        }
+        finally
+        {
+            IsCurrentlyLoadingMoreTracks = false;
+        }
+    }
+
+    public async Task ApplySearchAndReloadAsync()
+    {
+        ActiveTrackSearchText = string.IsNullOrWhiteSpace(TrackSearchTextUserIsTyping)
+            ? null
+            : TrackSearchTextUserIsTyping.Trim();
+
+        await ResetSelectorAndLoadFirstPageAsync();
+    }
+
+    public async Task ClearSearchAndReloadAsync()
+    {
+        TrackSearchTextUserIsTyping = "";
+        ActiveTrackSearchText = null;
+        RaisePropertyChanged(nameof(TrackSearchTextUserIsTyping));
+
+        await ResetSelectorAndLoadFirstPageAsync();
+    }
+
+
 }

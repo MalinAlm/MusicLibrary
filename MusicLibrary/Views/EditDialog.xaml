@@ -30,9 +30,41 @@
                             Margin="0,0,0,10"
                             Visibility="{Binding ShowSelector, Converter={StaticResource BoolToVisibilityConverter}}">
                     <TextBlock Text="{Binding SelectorLabel}" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding SelectorItems}"
-                              SelectedItem="{Binding SelectedSelectorItem}"
-                              DisplayMemberPath="Name"/>
+                    
+                    <!-- Sökfält (endast för Track) -->
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Margin="0,0,0,6">
+                        <TextBox Width="280"
+                                 Text="{Binding TrackSearchTextUserIsTyping, UpdateSourceTrigger=PropertyChanged}"
+                                 KeyDown="SearchBox_KeyDown"/>
+                        <Button Content="Sök"
+                                Margin="6,0,0,0"
+                                Command="{Binding SearchTracksCommand}"/>
+                        <Button Content="Rensa"
+                                Margin="6,0,0,0"
+                                Command="{Binding ClearSearchCommand}"/>
+                    </StackPanel>
+
+                    <ListBox ItemsSource="{Binding SelectorItems}"
+                                SelectedItem="{Binding SelectedSelectorItem}"
+                                Height="180"
+                                ScrollViewer.ScrollChanged="TrackSelectorList_ScrollChanged">   
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <Run Text="{Binding Name}"/>
+                                    <Run Text=" — "/>
+                                    <Run Text="{Binding Album.Title}"/>     
+                                </TextBlock>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock Text="Loading..."
+            Margin="0,6,0,0"
+            Visibility="{Binding IsCurrentlyLoadingMoreTracks, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
                 </StackPanel>
 
                 <!-- Name (Playlist/Artist/Track) -->
