@@ -26,25 +26,29 @@ public partial class EditDialog : Window
     private double _previousScrollExtentHeight = 0;
     private double _previousVerticalOffset = 0;
 
-    private async void TrackSelectorList_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    private async void SelectorList_ScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (DataContext is not EditDialogViewModel viewModel)
+        if (DataContext is not EditDialogViewModel vm)
             return;
 
-        bool extentHeightChangedBecauseItemsWereAdded = e.ExtentHeightChange != 0;
-        if (extentHeightChangedBecauseItemsWereAdded)
+        if (e.ExtentHeightChange != 0)
             return;
 
-        bool userScrolledDown = e.VerticalChange > 0;
-        if (!userScrolledDown)
+        if (e.VerticalChange <= 0)
             return;
 
-        bool userIsNearBottom = e.VerticalOffset + e.ViewportHeight >= e.ExtentHeight - 20;
+        bool userIsNearBottom =
+            e.VerticalOffset + e.ViewportHeight >= e.ExtentHeight - 20;
+
         if (!userIsNearBottom)
             return;
 
-        await viewModel.LoadNextTracksPageForSelectorAsync();
+        if (vm.Entity == EntityType.Track)
+            await vm.LoadNextTracksPageForSelectorAsync();
+        else if (vm.Entity == EntityType.Artist)
+            await vm.LoadNextArtistsPageForSelectorAsync();
     }
+
 
     private async void SearchBox_KeyDown(object sender, KeyEventArgs e)
     {
@@ -53,6 +57,13 @@ public partial class EditDialog : Window
 
         if (DataContext is EditDialogViewModel viewModel)
             await viewModel.ApplySearchAndReloadAsync();
+    }
+
+    private async void ArtistSearchBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        if (DataContext is EditDialogViewModel vm)
+            await vm.ApplyArtistSearchAndReloadAsync();
     }
 
 }

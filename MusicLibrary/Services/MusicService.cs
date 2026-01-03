@@ -290,6 +290,31 @@ namespace MusicLibrary.Services
                 .ToListAsync();
         }
 
+
+        public async Task<List<Artist>> GetArtistsPageAsync(
+            int numberOfArtistsToSkip,
+            int numberOfArtistsToTake,
+            string? searchText = null)
+        {
+            using var db = new MusicContext();
+
+            IQueryable<Artist> artistQuery = db.Artists.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                string trimmedSearchText = searchText.Trim();
+
+                artistQuery = artistQuery.Where(artist =>
+                    artist.Name != null && artist.Name.Contains(trimmedSearchText));
+            }
+
+            return await artistQuery
+                .OrderBy(artist => artist.ArtistId)
+                .Skip(numberOfArtistsToSkip)
+                .Take(numberOfArtistsToTake)
+                .ToListAsync();
+        }
+
     }
 
 }

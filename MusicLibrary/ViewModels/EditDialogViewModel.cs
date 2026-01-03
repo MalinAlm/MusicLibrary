@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Data;
+using MusicLibrary.Views.Dialogs;
+
 
 namespace MusicLibrary.ViewModels;
 
@@ -28,6 +30,7 @@ public class EditDialogViewModel : BaseViewModel
     public bool IsTrack => Entity == EntityType.Track;
     public bool ShowMediaTypeSelector => Entity == EntityType.Track && Mode == CrudMode.Add;
     public bool IsUpdatePlaylist => Mode == CrudMode.Update && Entity == EntityType.Playlist;
+    public bool IsArtistSelectorVisible => Entity == EntityType.Artist;
 
     // ---- Selector (Update/Delete) ----
     public bool ShowSelector => Mode != CrudMode.Add;
@@ -58,6 +61,41 @@ public class EditDialogViewModel : BaseViewModel
         get => isCurrentlyLoadingMoreTracks;
         set { isCurrentlyLoadingMoreTracks = value; RaisePropertyChanged(); }
     }
+
+    // ---------- Paging för Artist-selector (Delete/Update) ----------
+    private const int NumberOfArtistsToLoadPerPage = 15;
+
+    private int numberOfArtistsAlreadyLoaded = 0;
+    private bool moreArtistsExistInDatabase = true;
+
+    private bool isCurrentlyLoadingMoreArtists;
+    public bool IsCurrentlyLoadingMoreArtists
+    {
+        get => isCurrentlyLoadingMoreArtists;
+        set { isCurrentlyLoadingMoreArtists = value; RaisePropertyChanged(); }
+    }
+
+    public ObservableCollection<Artist> ArtistsAvailableToSelect { get; } = new();
+
+    // Användarinput
+    private string artistSearchTextUserIsTyping = "";
+    public string ArtistSearchTextUserIsTyping
+    {
+        get => artistSearchTextUserIsTyping;
+        set { artistSearchTextUserIsTyping = value; RaisePropertyChanged(); }
+    }
+
+    // DB söktext
+    private string? activeArtistSearchText = null;
+    private string? ActiveArtistSearchText
+    {
+        get => activeArtistSearchText;
+        set { activeArtistSearchText = value; }
+    }
+
+    public RelayCommand SearchArtistsCommand { get; }
+    public RelayCommand ClearArtistSearchCommand { get; }
+
 
     // Listan som visas i selector när Entity = Track
     public ObservableCollection<Track> TracksAvailableToSelect { get; } = new();
@@ -215,6 +253,8 @@ public class EditDialogViewModel : BaseViewModel
         SearchTracksCommand = new RelayCommand(async _ => await ApplySearchAndReloadAsync());
         ClearSearchCommand = new RelayCommand(async _ => await ClearSearchAndReloadAsync());
 
+        SearchArtistsCommand = new RelayCommand(async _ => await ApplyArtistSearchAndReloadAsync());
+        ClearArtistSearchCommand = new RelayCommand(async _ => await ClearArtistSearchAndReloadAsync());
 
         AddTrackCommand = new RelayCommand(async _ => await AddTrackToPlaylistAsync(),
             _ => IsUpdatePlaylist &&
@@ -242,7 +282,8 @@ public class EditDialogViewModel : BaseViewModel
             }
             else if (Entity == EntityType.Artist)
             {
-                SelectorItems = new ArrayList(await _service.GetArtistsAsync());
+                SelectorItems = ArtistsAvailableToSelect;
+                await ResetArtistSelectorAndLoadFirstPageAsync();
             }
             else 
             {
@@ -311,12 +352,29 @@ public class EditDialogViewModel : BaseViewModel
 
         try
         {
+            if (Mode == CrudMode.Delete)
+            {
+                string itemDescription = GetSelectedItemDescriptionForDialog();
+                if (string.IsNullOrWhiteSpace(itemDescription))
+                    throw new InvalidOperationException("Select an item to delete.");
+
+                bool userWantsToDelete = UserConfirmedDelete(itemDescription);
+                if (!userWantsToDelete)
+                    return;
+            }
+
             if (Entity == EntityType.Playlist)
                 await DoPlaylistAsync();
             else if (Entity == EntityType.Artist)
                 await DoArtistAsync();
             else
                 await DoTrackAsync();
+
+            if (Mode == CrudMode.Delete)
+            {
+                string deletedItemDescription = GetSelectedItemDescriptionForDialog();
+                ShowDeleteSuccess(deletedItemDescription);
+            }
 
             _owner.DialogResult = true;
             _owner.Close();
@@ -326,6 +384,34 @@ public class EditDialogViewModel : BaseViewModel
             ErrorText = ex.Message;
         }
     }
+
+
+    private bool UserConfirmedDelete(string itemDescription)
+    {
+        var confirmDialog = new ConfirmDialog(
+            dialogTitle: "Confirm delete",
+            messageText: $"Are you sure you want to delete:\n\n{itemDescription}?",
+            okButtonText: "Delete",
+            cancelButtonText: "Cancel")
+        {
+            Owner = _owner
+        };
+
+        return confirmDialog.ShowDialog() == true;
+    }
+
+    private void ShowDeleteSuccess(string itemDescription)
+    {
+        var infoDialog = new InfoDialog(
+            dialogTitle: "Deleted",
+            messageText: $"Deleted:\n\n{itemDescription}")
+        {
+            Owner = _owner
+        };
+
+        infoDialog.ShowDialog();
+    }
+
 
     // ---- Playlist CRUD ----
     private async Task DoPlaylistAsync()
@@ -585,5 +671,90 @@ public class EditDialogViewModel : BaseViewModel
         await ResetSelectorAndLoadFirstPageAsync();
     }
 
+    private string GetSelectedItemDescriptionForDialog()
+    {
+        if (SelectedSelectorItem == null)
+            return "";
+
+        if (Entity == EntityType.Playlist && SelectedSelectorItem is Playlist playlist)
+            return $"Playlist: {playlist.Name ?? "(No name)"}";
+
+        if (Entity == EntityType.Artist && SelectedSelectorItem is Artist artist)
+            return $"Artist: {artist.Name ?? "(No name)"}";
+
+        if (Entity == EntityType.Track && SelectedSelectorItem is Track track)
+        {
+            string albumTitle = track.Album?.Title ?? "(No album)";
+            return $"Track: {track.Name ?? "(No name)"} \nAlbum: {albumTitle}";
+        }
+
+        return SelectedSelectorItem.ToString() ?? "";
+    }
+
+    private async Task ResetArtistSelectorAndLoadFirstPageAsync()
+    {
+        numberOfArtistsAlreadyLoaded = 0;
+        moreArtistsExistInDatabase = true;
+
+        ArtistsAvailableToSelect.Clear();
+
+        await LoadNextArtistsPageForSelectorAsync();
+    }
+
+    public async Task LoadNextArtistsPageForSelectorAsync()
+    {
+        if (IsCurrentlyLoadingMoreArtists)
+            return;
+
+        if (!moreArtistsExistInDatabase)
+            return;
+
+        try
+        {
+            IsCurrentlyLoadingMoreArtists = true;
+
+            List<Artist> nextArtistsPage = await _service.GetArtistsPageAsync(
+                numberOfArtistsToSkip: numberOfArtistsAlreadyLoaded,
+                numberOfArtistsToTake: NumberOfArtistsToLoadPerPage,
+                searchText: ActiveArtistSearchText
+            );
+
+            if (nextArtistsPage.Count == 0)
+            {
+                moreArtistsExistInDatabase = false;
+                return;
+            }
+
+            foreach (Artist artist in nextArtistsPage)
+                ArtistsAvailableToSelect.Add(artist);
+
+            numberOfArtistsAlreadyLoaded += nextArtistsPage.Count;
+
+            if (nextArtistsPage.Count < NumberOfArtistsToLoadPerPage)
+                moreArtistsExistInDatabase = false;
+        }
+        finally
+        {
+            IsCurrentlyLoadingMoreArtists = false;
+        }
+    }
+
+    public async Task ApplyArtistSearchAndReloadAsync()
+    {
+        ActiveArtistSearchText = string.IsNullOrWhiteSpace(ArtistSearchTextUserIsTyping)
+            ? null
+            : ArtistSearchTextUserIsTyping.Trim();
+
+        await ResetArtistSelectorAndLoadFirstPageAsync();
+    }
+
+    public async Task ClearArtistSearchAndReloadAsync()
+    {
+        ArtistSearchTextUserIsTyping = "";
+        ActiveArtistSearchText = null;
+        RaisePropertyChanged(nameof(ArtistSearchTextUserIsTyping));
+
+        await ResetArtistSelectorAndLoadFirstPageAsync();
+    }
 
 }

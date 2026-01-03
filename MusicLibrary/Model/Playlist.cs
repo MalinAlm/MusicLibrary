@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
 
+namespace MusicLibrary;
+
 public partial class Playlist : INotifyPropertyChanged
 {
     private string? _name;
