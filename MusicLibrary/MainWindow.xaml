@@ -22,18 +22,21 @@
                 <MenuItem Header="Add">
                     <MenuItem Header="Playlist" Click="AddPlaylist_Click"/>
                     <MenuItem Header="Artist" Click="AddArtist_Click"/>
+                    <MenuItem Header="Album" Click="AddAlbum_Click"/>
                     <MenuItem Header="Track" Click="AddTrack_Click"/>
                 </MenuItem>
 
                 <MenuItem Header="Update">
                     <MenuItem Header="Playlist" Click="UpdatePlaylist_Click"/>
                     <MenuItem Header="Artist" Click="UpdateArtist_Click"/>
+                    <MenuItem Header="Album" Click="UpdateAlbum_Click"/>
                     <MenuItem Header="Track" Click="UpdateTrack_Click"/>
                 </MenuItem>
 
                 <MenuItem Header="Delete">
                     <MenuItem Header="Playlist" Click="DeletePlaylist_Click"/>
                     <MenuItem Header="Artist" Click="DeleteArtist_Click"/>
+                    <MenuItem Header="Album" Click="DeleteAlbum_Click"/>
                     <MenuItem Header="Track" Click="DeleteTrack_Click"/>
                 </MenuItem>
 

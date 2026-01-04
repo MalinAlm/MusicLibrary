@@ -25,7 +25,8 @@ namespace MusicLibrary.Services
         {
             using var db = new MusicContext();
 
-            var nextId = await db.Tracks.MaxAsync(t => t.TrackId) + 1;
+            var nextId = ((await db.Tracks.MaxAsync(t => (int?)t.TrackId)) ?? 0) + 1;
+
 
             var track = new Track
             {
@@ -106,13 +107,25 @@ namespace MusicLibrary.Services
         public async Task<Artist> CreateArtistAsync(string name)
         {
             using var db = new MusicContext();
-            var nextId = await db.Artists.MaxAsync(a => a.ArtistId) + 1;
 
-            var artist = new Artist { ArtistId = nextId, Name = name };
+            var trimmed = name.Trim();
+
+            var existing = await db.Artists
+                .FirstOrDefaultAsync(a => a.Name != null && a.Name.ToLower() == trimmed.ToLower());
+
+            if (existing != null)
+                return existing;
+
+            var maxId = await db.Artists.MaxAsync(a => (int?)a.ArtistId);
+            var nextId = (maxId ?? 0) + 1;
+
+            var artist = new Artist { ArtistId = nextId, Name = trimmed };
             db.Artists.Add(artist);
+
             await db.SaveChangesAsync();
             return artist;
         }
+
 
         public async Task UpdateArtistAsync(int artistId, string newName)
         {
@@ -173,8 +186,8 @@ namespace MusicLibrary.Services
         public async Task<Playlist> CreatePlaylistAsync(string name)
         {
             using var db = new MusicContext();
+            var nextId = ((await db.Playlists.MaxAsync(t => (int?)t.PlaylistId)) ?? 0) + 1;
 
-            var nextId = await db.Playlists.MaxAsync(p => p.PlaylistId) + 1;
 
             var playlist = new Playlist
             {
@@ -313,6 +326,56 @@ namespace MusicLibrary.Services
                 .Skip(numberOfArtistsToSkip)
                 .Take(numberOfArtistsToTake)
                 .ToListAsync();
+        }
+
+        public async Task<Album> CreateAlbumAsync(string title, int artistId)
+        {
+            using var db = new MusicContext();
+
+            var maxId = await db.Albums.MaxAsync(a => (int?)a.AlbumId);
+            var nextId = (maxId ?? 0) + 1;
+
+            var album = new Album
+            {
+                AlbumId = nextId,
+                Title = title,
+                ArtistId = artistId
+            };
+
+            db.Albums.Add(album);
+            await db.SaveChangesAsync();
+            return album;
+        }
+
+
+        public async Task UpdateAlbumAsync(int albumId, string newTitle, int artistId)
+        {
+            using var db = new MusicContext();
+
+            var album = await db.Albums.FindAsync(albumId);
+            if (album == null) return;
+
+            album.Title = newTitle;
+            album.ArtistId = artistId;
+
+            await db.SaveChangesAsync();
+        }
+
+        public async Task DeleteAlbumAsync(int albumId)
+        {
+            using var db = new MusicContext();
+
+            var album = await db.Albums
+                .Include(a => a.Tracks)
+                .FirstOrDefaultAsync(a => a.AlbumId == albumId);
+
+            if (album == null) return;
+
+            if (album.Tracks.Any())
+                throw new InvalidOperationException("Albumet har låtar kopplade och kan inte tas bort.");
+
+            db.Albums.Remove(album);
+            await db.SaveChangesAsync();
         }
 
     }

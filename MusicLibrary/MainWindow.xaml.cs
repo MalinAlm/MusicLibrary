@@ -133,4 +133,13 @@ public partial class MainWindow : Window
 
     private async void DeleteTrack_Click(object sender, RoutedEventArgs e)
         => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Track);
+    private async void AddAlbum_Click(object sender, RoutedEventArgs e)
+    => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Album);
+
+    private async void UpdateAlbum_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Album);
+
+    private async void DeleteAlbum_Click(object sender, RoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Album);
+
 }

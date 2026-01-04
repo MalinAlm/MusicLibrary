@@ -31,6 +31,9 @@ public class EditDialogViewModel : BaseViewModel
     public bool ShowMediaTypeSelector => Entity == EntityType.Track && Mode == CrudMode.Add;
     public bool IsUpdatePlaylist => Mode == CrudMode.Update && Entity == EntityType.Playlist;
     public bool IsArtistSelectorVisible => Entity == EntityType.Artist;
+    public bool IsAlbum => Entity == EntityType.Album;
+    public bool ShowAlbumOnAddArtist => Entity == EntityType.Artist && Mode == CrudMode.Add;
+    public bool ShowAlbumArtistSelector => Entity == EntityType.Album && Mode != CrudMode.Delete;
 
     // ---- Selector (Update/Delete) ----
     public bool ShowSelector => Mode != CrudMode.Add;
@@ -39,6 +42,7 @@ public class EditDialogViewModel : BaseViewModel
     {
         EntityType.Playlist => "Select playlist",
         EntityType.Artist => "Select artist",
+        EntityType.Album => "Select album",
         _ => "Select track"
     };
 
@@ -143,14 +147,43 @@ public class EditDialogViewModel : BaseViewModel
         }
     }
 
+    public ObservableCollection<Artist> Artists { get; } = new();
+
+    private Artist? _selectedArtistForAlbum;
+    public Artist? SelectedArtistForAlbum
+    {
+        get => _selectedArtistForAlbum;
+        set { _selectedArtistForAlbum = value; RaisePropertyChanged(); }
+    }
+
+    private string _newAlbumTitle = "";
+    public string NewAlbumTitle
+    {
+        get => _newAlbumTitle;
+        set { _newAlbumTitle = value; RaisePropertyChanged(); }
+    }
+
+    private bool _isBusy;
+    public bool IsBusy
+    {
+        get => _isBusy;
+        set
+        {
+            _isBusy = value;
+            RaisePropertyChanged();
+            ConfirmCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+
     // ---- Name field ----
     public bool ShowName => Mode != CrudMode.Delete;
 
     public string NameLabel => Entity switch
     {
-        EntityType.Playlist => "Name",
-        EntityType.Artist => "Name",
-        _ => "Track name"
+        EntityType.Playlist => "Playlist name",
+        EntityType.Artist => "Artist name",
+        _ => "Album name"
     };
 
     private string _name = "";
@@ -249,7 +282,7 @@ public class EditDialogViewModel : BaseViewModel
         Entity = entity;
         _owner = owner;
 
-        ConfirmCommand = new RelayCommand(_ => ConfirmAsync());
+        ConfirmCommand = new RelayCommand(_ => ConfirmAsync(), _ => !IsBusy);
         SearchTracksCommand = new RelayCommand(async _ => await ApplySearchAndReloadAsync());
         ClearSearchCommand = new RelayCommand(async _ => await ClearSearchAndReloadAsync());
 
@@ -285,6 +318,10 @@ public class EditDialogViewModel : BaseViewModel
                 SelectorItems = ArtistsAvailableToSelect;
                 await ResetArtistSelectorAndLoadFirstPageAsync();
             }
+            else if (Entity == EntityType.Album)
+            {
+                SelectorItems = new ArrayList(await _service.GetAlbumsAsync());
+            }
             else 
             {
                 SelectorItems = TracksAvailableToSelect;
@@ -292,6 +329,12 @@ public class EditDialogViewModel : BaseViewModel
             }
         }
 
+        if (Entity == EntityType.Album || (Entity == EntityType.Artist && Mode == CrudMode.Add))
+        {
+            Artists.Clear();
+            foreach (var a in await _service.GetArtistsAsync())
+                Artists.Add(a);
+        }
 
         if (IsTrack)
         {
@@ -343,22 +386,35 @@ public class EditDialogViewModel : BaseViewModel
             SelectedAlbum = Albums.FirstOrDefault(album => album.AlbumId == selectedTrack.AlbumId);
             SelectedMediaType = MediaTypes.FirstOrDefault(mediaType => mediaType.MediaTypeId == selectedTrack.MediaTypeId);
         }
-
+        else if (Entity == EntityType.Album && SelectedSelectorItem is Album al)
+        {
+            Name = al.Title ?? "";
+            SelectedArtistForAlbum = Artists.FirstOrDefault(x => x.ArtistId == al.ArtistId);
+        }
     }
 
     private async void ConfirmAsync()
     {
-        ErrorText = "";
+        // stoppa dubbelkörning
+        if (IsBusy)
+            return;
+
+        IsBusy = true;
 
         try
         {
+            ErrorText = "";
+
+            string itemDescriptionBeforeDelete = "";
+
             if (Mode == CrudMode.Delete)
             {
-                string itemDescription = GetSelectedItemDescriptionForDialog();
-                if (string.IsNullOrWhiteSpace(itemDescription))
+                itemDescriptionBeforeDelete = GetSelectedItemDescriptionForDialog();
+
+                if (string.IsNullOrWhiteSpace(itemDescriptionBeforeDelete))
                     throw new InvalidOperationException("Select an item to delete.");
 
-                bool userWantsToDelete = UserConfirmedDelete(itemDescription);
+                bool userWantsToDelete = UserConfirmedDelete(itemDescriptionBeforeDelete);
                 if (!userWantsToDelete)
                     return;
             }
@@ -370,10 +426,10 @@ public class EditDialogViewModel : BaseViewModel
             else
                 await DoTrackAsync();
 
+
             if (Mode == CrudMode.Delete)
             {
-                string deletedItemDescription = GetSelectedItemDescriptionForDialog();
-                ShowDeleteSuccess(deletedItemDescription);
+                ShowDeleteSuccess(itemDescriptionBeforeDelete);
             }
 
             _owner.DialogResult = true;
@@ -383,7 +439,12 @@ public class EditDialogViewModel : BaseViewModel
         {
             ErrorText = ex.Message;
         }
+        finally
+        {
+            IsBusy = false;
+        }
     }
+
 
 
     private bool UserConfirmedDelete(string itemDescription)
@@ -452,6 +513,19 @@ public class EditDialogViewModel : BaseViewModel
 
             await _service.CreateArtistAsync(Name);
         }
+
+        if (Mode == CrudMode.Add)
+        {
+            if (string.IsNullOrWhiteSpace(Name))
+                throw new InvalidOperationException("Name is required.");
+
+            var createdArtist = await _service.CreateArtistAsync(Name.Trim());
+
+            if (!string.IsNullOrWhiteSpace(NewAlbumTitle))
+            {
+                await _service.CreateAlbumAsync(NewAlbumTitle.Trim(), createdArtist.ArtistId);
+            }
+        }
         else if (Mode == CrudMode.Update)
         {
             if (SelectedSelectorItem is not Artist a)
@@ -468,6 +542,36 @@ public class EditDialogViewModel : BaseViewModel
                 throw new InvalidOperationException("Select an artist.");
 
             await _service.DeleteArtistAsync(a.ArtistId);
+        }
+    }
+
+    // ---- Album CRUD ----
+
+    private async Task DoAlbumAsync()
+    {
+        if (Mode == CrudMode.Delete)
+        {
+            if (SelectedSelectorItem is not Album al)
+                throw new InvalidOperationException("Select an album.");
+
+            await _service.DeleteAlbumAsync(al.AlbumId);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Name))
+            throw new InvalidOperationException("Album title is required.");
+
+        if (SelectedArtistForAlbum == null)
+            throw new InvalidOperationException("Select an artist.");
+
+        if (Mode == CrudMode.Add)
+            await _service.CreateAlbumAsync(Name.Trim(), SelectedArtistForAlbum.ArtistId);
+        else
+        {
+            if (SelectedSelectorItem is not Album al)
+                throw new InvalidOperationException("Select an album.");
+
+            await _service.UpdateAlbumAsync(al.AlbumId, Name.Trim(), SelectedArtistForAlbum.ArtistId);
         }
     }
 

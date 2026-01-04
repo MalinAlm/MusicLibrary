@@ -23,6 +23,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Välj befintlig (Update/Delete) -->
@@ -73,7 +74,15 @@
                             <DataTemplate DataType="{x:Type model:Artist}">
                                 <TextBlock Text="{Binding Name}"/>
                             </DataTemplate>
-
+                            
+                            <DataTemplate DataType="{x:Type model:Album}">
+                                <TextBlock>
+                                    <Run Text="{Binding Title}"/>
+                                    <Run Text=" — "/>
+                                    <Run Text="{Binding Artist.Name}"/>
+                                </TextBlock>
+                            </DataTemplate>
+                            
                             <DataTemplate DataType="{x:Type model:Playlist}">
                                 <TextBlock Text="{Binding Name}"/>
                             </DataTemplate>
@@ -90,11 +99,6 @@
 
                     </ListBox>
 
-                    <!-- Loading-text (visa beroende på vad som laddas) -->
-                    <TextBlock Text="Loading..."
-               Margin="0,6,0,0"
-               Visibility="{Binding IsSelectorLoadingVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
                 </StackPanel>
 
                 <!-- Name (Playlist/Artist/Track) -->
@@ -104,6 +108,21 @@
                     <TextBlock Text="{Binding NameLabel}" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
+
+                <StackPanel Margin="0,0,0,10" Grid.Row="2"
+                            Visibility="{Binding IsAlbum, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="Artist" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding Artists}"
+                              SelectedItem="{Binding SelectedArtistForAlbum}"
+                              DisplayMemberPath="Name"/>
+                </StackPanel>
+
+                <StackPanel Margin="0,0,0,10" Grid.Row="2"
+                            Visibility="{Binding ShowAlbumOnAddArtist, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="Create album for this artist (optional)" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding NewAlbumTitle, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+
 
                 <!-- Track fields (syns bara när Entity == Track) -->
                 <StackPanel Grid.Row="2"

@@ -17,6 +17,7 @@ public enum EntityType
 {
     Playlist,
     Artist,
+    Album,
     Track
 }
 
