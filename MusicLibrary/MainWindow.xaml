@@ -107,11 +107,11 @@
                                             <TextBlock Text="Double click track to add to playlist"/>
                                         </ToolTip>
                                     </TextBlock.ToolTip>
-            </TextBlock>
+                             </TextBlock>
 
                             </StackPanel>
                             <TreeView x:Name="myTreeView"
-                                  SelectedItemChanged="TreeView_SelectedItemChanged" Margin="5" Grid.Row="1">
+                                  SelectedItemChanged="TreeView_SelectedItemChanged" Margin="5" Grid.Row="1" MouseDoubleClick="TreeView_MouseDoubleClick">
                             <TreeView.Resources>
                                 <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
                                     <TextBlock>

@@ -74,7 +74,30 @@ public partial class MainWindow : Window
                 vm.RemoveTrackFromPlaylistCommand.Execute(null);
         }
     }
-//Meny
+
+    private void TreeView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is not MusicViewModel vm)
+            return;
+
+        if (vm.SelectedPlaylist == null)
+        {
+            MessageBox.Show("Select a playlist first.", "No playlist selected");
+            return;
+        }
+
+        if (myTreeView.SelectedItem is not Track track)
+            return;
+
+        vm.SelectedLibraryTrack = track;
+
+        if (vm.AddTrackToPlaylistCommand.CanExecute(null))
+            vm.AddTrackToPlaylistCommand.Execute(null);
+
+    }
+
+
+    //Meny
     private async Task OpenDialogAndRefreshAsync(CrudMode mode, EntityType entity)
     {
         var dlg = new EditDialog(mode, entity) { Owner = this };
