@@ -77,18 +77,41 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <Border Grid.Column="1"
+                <Border 
                         BorderBrush="LightGray"
                         BorderThickness="1"
                         Margin="5">     
                     <DockPanel>
-                        <TextBlock Text="Artists"
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <TextBlock Text="Artists"
                                  FontWeight="Bold"
                                  Padding="5"
                                  DockPanel.Dock="Top"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="ⓘ"
+                                           FontSize="20"
+                                           Margin="220,0,0,0"
+                                           VerticalAlignment="Center"
+                                           Cursor="Arrow"
+                                           Focusable="True"
+                                           ToolTipService.ShowDuration="60000"
+                                           AutomationProperties.Name="Information"
+                                           AutomationProperties.HelpText="Double click track to add to playlist">
+                                    <TextBlock.ToolTip>
+                                        <ToolTip Placement="Mouse">
+                                            <TextBlock Text="Double click track to add to playlist"/>
+                                        </ToolTip>
+                                    </TextBlock.ToolTip>
+            </TextBlock>
 
-                        <TreeView x:Name="myTreeView"
-                                  SelectedItemChanged="TreeView_SelectedItemChanged" Margin="5">
+                            </StackPanel>
+                            <TreeView x:Name="myTreeView"
+                                  SelectedItemChanged="TreeView_SelectedItemChanged" Margin="5" Grid.Row="1">
                             <TreeView.Resources>
                                 <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
                                     <TextBlock>
@@ -106,6 +129,7 @@
                             </TreeView.Resources>
                         </TreeView>
 
+                        </Grid>
                     </DockPanel>
 
                 </Border>
