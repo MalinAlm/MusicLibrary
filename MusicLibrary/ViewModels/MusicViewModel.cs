@@ -18,6 +18,23 @@ namespace MusicLibrary.ViewModels
 
         private readonly MusicService _service = new();
 
+        private readonly Func<CrudMode, EntityType, Task> _openDialogAndRefresh;
+
+        public RelayCommand AddPlaylistDialogCommand { get; }
+        public RelayCommand AddArtistDialogCommand { get; }
+        public RelayCommand AddAlbumDialogCommand { get; }
+        public RelayCommand AddTrackDialogCommand { get; }
+
+        public RelayCommand UpdatePlaylistDialogCommand { get; }
+        public RelayCommand UpdateArtistDialogCommand { get; }
+        public RelayCommand UpdateAlbumDialogCommand { get; }
+        public RelayCommand UpdateTrackDialogCommand { get; }
+
+        public RelayCommand DeletePlaylistDialogCommand { get; }
+        public RelayCommand DeleteArtistDialogCommand { get; }
+        public RelayCommand DeleteAlbumDialogCommand { get; }
+        public RelayCommand DeleteTrackDialogCommand { get; }
+
         public ObservableCollection<Playlist> Playlists { get; } = new();
         public ObservableCollection<Track> Tracks { get; } = new();
         public ObservableCollection<Track> LibraryTracks { get; } = new();
@@ -31,8 +48,30 @@ namespace MusicLibrary.ViewModels
         public RelayCommand DeleteArtistCommand { get; }
 
 
-        public MusicViewModel()
+        public MusicViewModel(Func<CrudMode, EntityType, Task> openDialogAndRefresh)
         {
+            _openDialogAndRefresh = openDialogAndRefresh;
+
+            // Add
+            AddPlaylistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Add, EntityType.Playlist));
+            AddArtistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Add, EntityType.Artist));
+            AddAlbumDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Add, EntityType.Album));
+            AddTrackDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Add, EntityType.Track));
+
+            // Update
+            UpdatePlaylistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Update, EntityType.Playlist));
+            UpdateArtistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Update, EntityType.Artist));
+            UpdateAlbumDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Update, EntityType.Album));
+            UpdateTrackDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Update, EntityType.Track));
+
+            // Delete
+            DeletePlaylistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Delete, EntityType.Playlist));
+            DeleteArtistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Delete, EntityType.Artist));
+            DeleteAlbumDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Delete, EntityType.Album));
+            DeleteTrackDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Delete, EntityType.Track));
+
+
+
             CreatePlaylistCommand = new RelayCommand(
                 _ => CreatePlaylistAsync(),
                 _ => !string.IsNullOrWhiteSpace(NewPlaylistName)

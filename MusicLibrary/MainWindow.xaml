@@ -7,6 +7,27 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="500" Width="1000">
 
+    <Window.InputBindings>
+        <!-- Add -->
+        <KeyBinding Key="P" Modifiers="Ctrl" Command="{Binding AddPlaylistDialogCommand}" />
+        <KeyBinding Key="A" Modifiers="Ctrl" Command="{Binding AddArtistDialogCommand}" />
+        <KeyBinding Key="L" Modifiers="Ctrl" Command="{Binding AddAlbumDialogCommand}" />
+        <KeyBinding Key="T" Modifiers="Ctrl" Command="{Binding AddTrackDialogCommand}" />
+
+        <!-- Update -->
+        <KeyBinding Key="P" Modifiers="Shift" Command="{Binding UpdatePlaylistDialogCommand}" />
+        <KeyBinding Key="A" Modifiers="Shift" Command="{Binding UpdateArtistDialogCommand}" />
+        <KeyBinding Key="L" Modifiers="Shift" Command="{Binding UpdateAlbumDialogCommand}" />
+        <KeyBinding Key="T" Modifiers="Shift" Command="{Binding UpdateTrackDialogCommand}" />
+
+        <!-- Delete -->
+        <KeyBinding Key="P" Modifiers="Alt" Command="{Binding DeletePlaylistDialogCommand}" />
+        <KeyBinding Key="A" Modifiers="Alt" Command="{Binding DeleteArtistDialogCommand}" />
+        <KeyBinding Key="L" Modifiers="Alt" Command="{Binding DeleteAlbumDialogCommand}" />
+        <KeyBinding Key="T" Modifiers="Alt" Command="{Binding DeleteTrackDialogCommand}" />
+    </Window.InputBindings>
+
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -17,27 +38,27 @@
 
         <!-- MENU -->
         <Menu Grid.Row="0">
-            <MenuItem Header="_Edit">
+            <MenuItem Header="Edit">
 
                 <MenuItem Header="Add">
-                    <MenuItem Header="Playlist" Click="AddPlaylist_Click"/>
-                    <MenuItem Header="Artist" Click="AddArtist_Click"/>
-                    <MenuItem Header="Album" Click="AddAlbum_Click"/>
-                    <MenuItem Header="Track" Click="AddTrack_Click"/>
+                    <MenuItem Header="Playlist" Click="AddPlaylist_Click" InputGestureText="Ctrl+P"/>
+                    <MenuItem Header="Artist" Click="AddArtist_Click" InputGestureText="Ctrl+A"/>
+                    <MenuItem Header="Album" Click="AddAlbum_Click" InputGestureText="Ctrl+L"/>
+                    <MenuItem Header="Track" Click="AddTrack_Click" InputGestureText="Ctrl+T"/>
                 </MenuItem>
 
                 <MenuItem Header="Update">
-                    <MenuItem Header="Playlist" Click="UpdatePlaylist_Click"/>
-                    <MenuItem Header="Artist" Click="UpdateArtist_Click"/>
-                    <MenuItem Header="Album" Click="UpdateAlbum_Click"/>
-                    <MenuItem Header="Track" Click="UpdateTrack_Click"/>
+                    <MenuItem Header="Playlist" Click="UpdatePlaylist_Click" InputGestureText="Shift+P"/>
+                    <MenuItem Header="Artist" Click="UpdateArtist_Click" InputGestureText="Shift+A"/>
+                    <MenuItem Header="Album" Click="UpdateAlbum_Click" InputGestureText="Shift+L"/>
+                    <MenuItem Header="Track" Click="UpdateTrack_Click" InputGestureText="Shift+T"/>
                 </MenuItem>
 
                 <MenuItem Header="Delete">
-                    <MenuItem Header="Playlist" Click="DeletePlaylist_Click"/>
-                    <MenuItem Header="Artist" Click="DeleteArtist_Click"/>
-                    <MenuItem Header="Album" Click="DeleteAlbum_Click"/>
-                    <MenuItem Header="Track" Click="DeleteTrack_Click"/>
+                    <MenuItem Header="Playlist" Click="DeletePlaylist_Click" InputGestureText="Alt+P"/>
+                    <MenuItem Header="Artist" Click="DeleteArtist_Click" InputGestureText="Alt+A"/>
+                    <MenuItem Header="Album" Click="DeleteAlbum_Click" InputGestureText="Alt+L"/>
+                    <MenuItem Header="Track" Click="DeleteTrack_Click" InputGestureText="Alt+T"/>
                 </MenuItem>
 
             </MenuItem>

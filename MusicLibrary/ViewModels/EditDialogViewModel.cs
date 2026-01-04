@@ -97,10 +97,6 @@ public class EditDialogViewModel : BaseViewModel
         set { activeArtistSearchText = value; }
     }
 
-    public RelayCommand SearchArtistsCommand { get; }
-    public RelayCommand ClearArtistSearchCommand { get; }
-
-
     // Listan som visas i selector när Entity = Track
     public ObservableCollection<Track> TracksAvailableToSelect { get; } = new();
 
@@ -129,10 +125,6 @@ public class EditDialogViewModel : BaseViewModel
         get => activeTrackSearchText;
         set { activeTrackSearchText = value; }
     }
-
-    public RelayCommand SearchTracksCommand { get; }
-    public RelayCommand ClearSearchCommand { get; }
-
 
 
     private object? _selectedSelectorItem;
@@ -231,6 +223,11 @@ public class EditDialogViewModel : BaseViewModel
     public RelayCommand ConfirmCommand { get; }
     public RelayCommand AddTrackCommand { get; }
     public RelayCommand RemoveTrackCommand { get; }
+    public RelayCommand SearchArtistsCommand { get; }
+    public RelayCommand ClearArtistSearchCommand { get; }
+    public RelayCommand SearchTracksCommand { get; }
+    public RelayCommand ClearSearchCommand { get; }
+
 
     // ---- Playlist track management ----
     public ObservableCollection<Track> PlaylistTracks { get; } = new();

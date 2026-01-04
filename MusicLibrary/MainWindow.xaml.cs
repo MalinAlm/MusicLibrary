@@ -11,14 +11,16 @@ namespace MusicLibrary;
 
 public partial class MainWindow : Window
 {
-    private MusicViewModel _vm = new MusicViewModel();
+    private MusicViewModel _vm;
 
     public MainWindow()
     {
         InitializeComponent();
+        _vm = new MusicViewModel(OpenDialogAndRefreshAsync);
         DataContext = _vm;
         Loaded += MainWindow_Loaded;
     }
+
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
@@ -106,6 +108,27 @@ public partial class MainWindow : Window
         if (result == true)
             await RefreshAllAsync();
     }
+
+    public static class EditCommands
+    {
+        public static readonly RoutedUICommand AddPlaylist = new("Add Playlist", "AddPlaylist", typeof(EditCommands));
+        public static readonly RoutedUICommand AddArtist = new("Add Artist", "AddArtist", typeof(EditCommands));
+        public static readonly RoutedUICommand AddAlbum = new("Add Album", "AddAlbum", typeof(EditCommands));
+        public static readonly RoutedUICommand AddTrack = new("Add Track", "AddTrack", typeof(EditCommands));
+    }
+
+    private async void AddPlaylist_Executed(object sender, ExecutedRoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Playlist);
+
+    private async void AddArtist_Executed(object sender, ExecutedRoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Artist);
+
+    private async void AddAlbum_Executed(object sender, ExecutedRoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Album);
+
+    private async void AddTrack_Executed(object sender, ExecutedRoutedEventArgs e)
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Track);
+
 
     private async void AddPlaylist_Click(object sender, RoutedEventArgs e)
         => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Playlist);
