@@ -38,9 +38,9 @@ public partial class MainWindow : Window
         using var db = new MusicContext();
 
         var artists = db.Artists
-            .Where(artist => artist.Albums.Count > 2)
-            .Include(artist => artist.Albums)
-            .ThenInclude(album => album.Tracks)
+            .Include(a => a.Albums)
+                .ThenInclude(al => al.Tracks)
+            .OrderBy(a => a.Name ?? "")
             .ToList();
 
         myTreeView.ItemsSource = new ObservableCollection<Artist>(artists);
