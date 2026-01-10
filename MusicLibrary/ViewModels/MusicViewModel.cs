@@ -111,6 +111,11 @@ namespace MusicLibrary.ViewModels
 
                     _ = LoadMoreTracksAsync();
                 }
+                else
+                {
+                    Tracks.Clear();
+                    SelectedPlaylistTrack = null;
+                }
             }
         }
 

@@ -32,14 +32,29 @@ public partial class MainWindow : Window
 
         await _vm.LoadDataAsync();    // playlists
         await _vm.LoadLibraryAsync(); // library tracks
-        await LoadArtistsAsync();     // treeview (NU async)
+        await LoadArtistsAsync();     // treeview 
 
         if (selectedPlaylistId != null)
         {
             _vm.SelectedPlaylist = _vm.Playlists.FirstOrDefault(p => p.PlaylistId == selectedPlaylistId);
+
             if (_vm.SelectedPlaylist != null)
-                await _vm.LoadMoreTracksAsync();
+            {
+                await _vm.LoadMoreTracksAsync(); 
+            }
+            else
+            {
+              
+                _vm.Tracks.Clear();
+                _vm.SelectedPlaylistTrack = null;
+            }
         }
+        else
+        {
+            _vm.Tracks.Clear();
+            _vm.SelectedPlaylistTrack = null;
+        }
+
     }
 
 
