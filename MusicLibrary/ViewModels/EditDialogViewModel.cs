@@ -19,7 +19,24 @@ public class EditDialogViewModel : BaseViewModel
     public CrudMode Mode { get; }
     public EntityType Entity { get; }
 
-    public string DialogTitle => $"{Mode} {Entity}";
+    private string ModeText => Mode switch
+    {
+        CrudMode.Add => "Add",
+        CrudMode.Update => "Update",
+        CrudMode.Delete => "Delete",
+        _ => Mode.ToString()
+    };
+
+    private string EntityText => Entity switch
+    {
+        EntityType.Playlist => "Playlist",
+        EntityType.Artist => "Artist",
+        EntityType.Album => "Album",
+        EntityType.Track => "Track",
+        _ => Entity.ToString()
+    };
+
+    public string DialogTitle => $"{ModeText} {EntityText}";
     public string ConfirmLabel => Mode switch
     {
         CrudMode.Add => "Add",
@@ -175,7 +192,9 @@ public class EditDialogViewModel : BaseViewModel
     {
         EntityType.Playlist => "Playlist name",
         EntityType.Artist => "Artist name",
-        _ => "Album name"
+        EntityType.Album => "Album title",
+        EntityType.Track => "Track name",
+        _ => "Name"
     };
 
     private string _name = "";
@@ -508,20 +527,12 @@ public class EditDialogViewModel : BaseViewModel
             if (string.IsNullOrWhiteSpace(Name))
                 throw new InvalidOperationException("Name is required.");
 
-            await _service.CreateArtistAsync(Name);
-        }
-
-        if (Mode == CrudMode.Add)
-        {
-            if (string.IsNullOrWhiteSpace(Name))
-                throw new InvalidOperationException("Name is required.");
-
             var createdArtist = await _service.CreateArtistAsync(Name.Trim());
 
             if (!string.IsNullOrWhiteSpace(NewAlbumTitle))
-            {
                 await _service.CreateAlbumAsync(NewAlbumTitle.Trim(), createdArtist.ArtistId);
-            }
+
+            return;
         }
         else if (Mode == CrudMode.Update)
         {
