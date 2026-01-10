@@ -298,20 +298,20 @@ public class EditDialogViewModel : BaseViewModel
         Entity = entity;
         _owner = owner;
 
-        ConfirmCommand = new RelayCommand(_ => ConfirmAsync(), _ => !IsBusy);
-        SearchTracksCommand = new RelayCommand(_ => ApplySearchAndReloadAsync());
-        ClearSearchCommand = new RelayCommand(_ => ClearSearchAndReloadAsync());
+        ConfirmCommand = new RelayCommand(parameter => ConfirmAsync(), _ => !IsBusy);
+        SearchTracksCommand = new RelayCommand(parameter => ApplySearchAndReloadAsync());
+        ClearSearchCommand = new RelayCommand(parameter => ClearSearchAndReloadAsync());
 
-        SearchArtistsCommand = new RelayCommand(_ => ApplyArtistSearchAndReloadAsync());
-        ClearArtistSearchCommand = new RelayCommand(_ => ClearArtistSearchAndReloadAsync());
+        SearchArtistsCommand = new RelayCommand(parameter => ApplyArtistSearchAndReloadAsync());
+        ClearArtistSearchCommand = new RelayCommand(parameter => ClearArtistSearchAndReloadAsync());
 
-        AddTrackCommand = new RelayCommand(_ => AddTrackToPlaylistAsync(),
-            _ => IsUpdatePlaylist &&
+        AddTrackCommand = new RelayCommand(parameter => AddTrackToPlaylistAsync(),
+            parameter => IsUpdatePlaylist &&
                  SelectedSelectorItem is Playlist &&
                  SelectedLibraryTrack != null);
 
-        RemoveTrackCommand = new RelayCommand(_ => RemoveTrackFromPlaylistAsync(),
-            _ => IsUpdatePlaylist &&
+        RemoveTrackCommand = new RelayCommand(parameter => RemoveTrackFromPlaylistAsync(),
+            parameter => IsUpdatePlaylist &&
                  SelectedSelectorItem is Playlist &&
                  SelectedPlaylistTrack != null);
 
