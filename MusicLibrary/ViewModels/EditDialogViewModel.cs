@@ -421,32 +421,30 @@ public class EditDialogViewModel : BaseViewModel
         {
             ErrorText = "";
 
-            string itemDescriptionBeforeDelete = "";
+            string itemDescription = GetPendingItemDescription();
 
-            if (Mode == CrudMode.Delete)
-            {
-                itemDescriptionBeforeDelete = GetSelectedItemDescriptionForDialog();
+            string title = GetConfirmTitle();
+            string okText = GetOkButtonText();
+            string verb = GetActionVerb();
 
-                if (string.IsNullOrWhiteSpace(itemDescriptionBeforeDelete))
-                    throw new InvalidOperationException("Select an item to delete.");
+            string message = $"Are you sure you want to {verb}:\n\n{itemDescription}?";
 
-                bool userWantsToDelete = UserConfirmedDelete(itemDescriptionBeforeDelete);
-                if (!userWantsToDelete)
-                    return;
-            }
+            bool userConfirmed = UserConfirmedAction(title, message, okText);
+            if (!userConfirmed)
+                return;
+
 
             if (Entity == EntityType.Playlist)
                 await DoPlaylistAsync();
             else if (Entity == EntityType.Artist)
                 await DoArtistAsync();
+            else if (Entity == EntityType.Album)
+                await DoAlbumAsync();
             else
                 await DoTrackAsync();
 
 
-            if (Mode == CrudMode.Delete)
-            {
-                ShowDeleteSuccess(itemDescriptionBeforeDelete);
-            }
+            ShowActionSuccess(Mode, itemDescription);
 
             _owner.DialogResult = true;
             _owner.Close();
@@ -461,14 +459,31 @@ public class EditDialogViewModel : BaseViewModel
         }
     }
 
+    private void ShowActionSuccess(CrudMode mode, string itemDescription)
+    {
+        string title = mode switch
+        {
+            CrudMode.Add => "Added",
+            CrudMode.Update => "Updated",
+            CrudMode.Delete => "Deleted",
+            _ => "Done"
+        };
 
+        var infoDialog = new InfoDialog(
+            dialogTitle: title,
+            messageText: $"{title}:\n\n{itemDescription}")
+        {
+            Owner = _owner
+        };
 
-    private bool UserConfirmedDelete(string itemDescription)
+        infoDialog.ShowDialog();
+    }
+    private bool UserConfirmedAction(string dialogTitle, string messageText, string okButtonText)
     {
         var confirmDialog = new ConfirmDialog(
-            dialogTitle: "Confirm delete",
-            messageText: $"Are you sure you want to delete:\n\n{itemDescription}?",
-            okButtonText: "Delete",
+            dialogTitle: dialogTitle,
+            messageText: messageText,
+            okButtonText: okButtonText,
             cancelButtonText: "Cancel")
         {
             Owner = _owner
@@ -476,6 +491,69 @@ public class EditDialogViewModel : BaseViewModel
 
         return confirmDialog.ShowDialog() == true;
     }
+
+    private string GetConfirmTitle() => Mode switch
+    {
+        CrudMode.Add => "Confirm add",
+        CrudMode.Update => "Confirm update",
+        CrudMode.Delete => "Confirm delete",
+        _ => "Confirm"
+    };
+
+    private string GetOkButtonText() => Mode switch
+    {
+        CrudMode.Add => "Add",
+        CrudMode.Update => "Update",
+        CrudMode.Delete => "Delete",
+        _ => "OK"
+    };
+
+    private string GetActionVerb() => Mode switch
+    {
+        CrudMode.Add => "add",
+        CrudMode.Update => "update",
+        CrudMode.Delete => "delete",
+        _ => "apply changes to"
+    };
+
+    // Beskriv det som kommer att påverkas (för dialogtexten)
+    private string GetPendingItemDescription()
+    {
+        // Update/Delete: beskriv valt item
+        if (Mode != CrudMode.Add)
+            return GetSelectedItemDescriptionForDialog();
+
+        // Add: bygg från inputfält
+        return Entity switch
+        {
+            EntityType.Playlist => $"Playlist: {Name}",
+
+            EntityType.Artist => string.IsNullOrWhiteSpace(NewAlbumTitle)
+                ? $"Artist: {Name}"
+                : $"Artist: {Name}\nCreate album: {NewAlbumTitle}",
+
+            EntityType.Album => $"Album: {Name}\nArtist: {SelectedArtistForAlbum?.Name ?? "(none)"}",
+
+            EntityType.Track => $"Track: {Name}\nLength (ms): {MillisecondsText}\nAlbum: {SelectedAlbum?.Title ?? "(No album)"}",
+
+            _ => Name
+        };
+    }
+
+
+    //private bool UserConfirmedDelete(string itemDescription)
+    //{
+    //    var confirmDialog = new ConfirmDialog(
+    //        dialogTitle: "Confirm delete",
+    //        messageText: $"Are you sure you want to delete:\n\n{itemDescription}?",
+    //        okButtonText: "Delete",
+    //        cancelButtonText: "Cancel")
+    //    {
+    //        Owner = _owner
+    //    };
+
+    //    return confirmDialog.ShowDialog() == true;
+    //}
 
     private void ShowDeleteSuccess(string itemDescription)
     {
@@ -794,13 +872,16 @@ public class EditDialogViewModel : BaseViewModel
         if (Entity == EntityType.Artist && SelectedSelectorItem is Artist artist)
             return $"Artist: {artist.Name ?? "(No name)"}";
 
+        if (Entity == EntityType.Album && SelectedSelectorItem is Album album)
+            return $"Album: {album.Title ?? "(No title)"}\nArtist: {album.Artist?.Name ?? "(Unknown artist)"}";
+
         if (Entity == EntityType.Track && SelectedSelectorItem is Track track)
         {
             string albumTitle = track.Album?.Title ?? "(No album)";
-            return $"Track: {track.Name ?? "(No name)"} \nAlbum: {albumTitle}";
+            return $"Track: {track.Name ?? "(No name)"}\nAlbum: {albumTitle}";
         }
 
-        return SelectedSelectorItem.ToString() ?? "";
+        return "";
     }
 
     private async Task ResetArtistSelectorAndLoadFirstPageAsync()
