@@ -3,9 +3,6 @@ using MusicLibrary.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Windows;
-using MusicLibrary;
 
 namespace MusicLibrary.ViewModels
 {
@@ -38,14 +35,8 @@ namespace MusicLibrary.ViewModels
         public ObservableCollection<Playlist> Playlists { get; } = new();
         public ObservableCollection<Track> Tracks { get; } = new();
         public ObservableCollection<Track> LibraryTracks { get; } = new();
-        public RelayCommand CreatePlaylistCommand { get; }
         public RelayCommand AddTrackToPlaylistCommand { get; }
-        public RelayCommand UpdatePlaylistCommand { get; }
         public RelayCommand RemoveTrackFromPlaylistCommand { get; }
-        public RelayCommand DeletePlaylistCommand { get; }
-        public RelayCommand CreateArtistCommand { get; }
-        public RelayCommand UpdateArtistCommand { get; }
-        public RelayCommand DeleteArtistCommand { get; }
 
 
         public MusicViewModel(Func<CrudMode, EntityType, Task> openDialogAndRefresh)
@@ -71,49 +62,14 @@ namespace MusicLibrary.ViewModels
             DeleteTrackDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Delete, EntityType.Track));
 
 
-
-            CreatePlaylistCommand = new RelayCommand(
-                _ => CreatePlaylistAsync(),
-                _ => !string.IsNullOrWhiteSpace(NewPlaylistName)
-            );
-
             AddTrackToPlaylistCommand = new RelayCommand(
                 _ => AddTrackToPlaylistAsync(),
                 _ => SelectedPlaylist != null && SelectedLibraryTrack != null
             );
 
-            UpdatePlaylistCommand = new RelayCommand(
-                _ => UpdatePlaylistAsync(),
-                _ => SelectedPlaylist != null &&
-                     !string.IsNullOrWhiteSpace(EditPlaylistName) &&
-                     EditPlaylistName != SelectedPlaylist.Name
-            );
-
             RemoveTrackFromPlaylistCommand = new RelayCommand(
                 _ => RemoveTrackFromPlaylistAsync(),
                 _ => SelectedPlaylist != null && SelectedPlaylistTrack != null
-            );
-
-            DeletePlaylistCommand = new RelayCommand(
-                _ => DeletePlaylistAsync(),
-                _ => SelectedPlaylist != null
-            );
-
-            CreateArtistCommand = new RelayCommand(
-                _ => CreateArtistAsync(),
-                _ => !string.IsNullOrWhiteSpace(NewArtistName)
-            );
-
-            UpdateArtistCommand = new RelayCommand(
-                _ => UpdateArtistAsync(),
-                _ => SelectedArtist != null &&
-                     !string.IsNullOrWhiteSpace(EditArtistName) &&
-                     EditArtistName != SelectedArtist.Name
-            );
-
-            DeleteArtistCommand = new RelayCommand(
-                _ => DeleteArtistAsync(),
-                _ => SelectedArtist != null
             );
 
         }
@@ -145,8 +101,6 @@ namespace MusicLibrary.ViewModels
                 _selectedPlaylist = value;
                 OnPropertyChanged(nameof(SelectedPlaylist));
 
-                DeletePlaylistCommand?.RaiseCanExecuteChanged();
-
                 if (_selectedPlaylist != null)
                 {
                     EditPlaylistName = _selectedPlaylist.Name;
@@ -168,8 +122,6 @@ namespace MusicLibrary.ViewModels
             {
                 _newPlaylistName = value;
                 OnPropertyChanged(nameof(NewPlaylistName));
-
-                CreatePlaylistCommand?.RaiseCanExecuteChanged();
             }
         }
 
@@ -181,7 +133,6 @@ namespace MusicLibrary.ViewModels
             {
                 _editPlaylistName = value;
                 OnPropertyChanged(nameof(EditPlaylistName));
-                UpdatePlaylistCommand?.RaiseCanExecuteChanged();
             }
         }
 
@@ -222,8 +173,6 @@ namespace MusicLibrary.ViewModels
 
                 EditArtistName = _selectedArtist?.Name ?? "";
 
-                UpdateArtistCommand?.RaiseCanExecuteChanged();
-                DeleteArtistCommand?.RaiseCanExecuteChanged();
             }
         }
 
@@ -235,7 +184,6 @@ namespace MusicLibrary.ViewModels
             {
                 _newArtistName = value;
                 OnPropertyChanged(nameof(NewArtistName));
-                CreateArtistCommand?.RaiseCanExecuteChanged();
             }
         }
 
@@ -247,7 +195,6 @@ namespace MusicLibrary.ViewModels
             {
                 _editArtistName = value;
                 OnPropertyChanged(nameof(EditArtistName));
-                UpdateArtistCommand?.RaiseCanExecuteChanged();
             }
         }
 
@@ -297,15 +244,6 @@ namespace MusicLibrary.ViewModels
             OnPropertyChanged(nameof(Tracks));
         }
 
-        private async Task CreatePlaylistAsync()
-        {
-            var playlist = await _service.CreatePlaylistAsync(NewPlaylistName);
-
-            Playlists.Add(playlist);
-            SelectedPlaylist = playlist;
-
-            NewPlaylistName = string.Empty;
-        }
 
         private async Task AddTrackToPlaylistAsync()
         {
@@ -317,16 +255,6 @@ namespace MusicLibrary.ViewModels
             await LoadTracksForSelectedPlaylistAsync();
         }
 
-        private async Task UpdatePlaylistAsync()
-        {
-            await _service.UpdatePlaylistNameAsync(
-                SelectedPlaylist!.PlaylistId,
-                EditPlaylistName
-            );
-
-            SelectedPlaylist.Name = EditPlaylistName;
-            OnPropertyChanged(nameof(Playlists));
-        }
 
         public async Task LoadMoreTracksAsync()
         {
@@ -368,52 +296,6 @@ namespace MusicLibrary.ViewModels
 
             Tracks.Remove(SelectedPlaylistTrack);
             SelectedPlaylistTrack = null;
-        }
-
-        private async Task DeletePlaylistAsync()
-        {
-            var playlist = SelectedPlaylist;
-            if (playlist == null)
-                return;
-
-            await _service.DeletePlaylistAsync(playlist.PlaylistId);
-
-            Playlists.Remove(playlist);
-
-            SelectedPlaylist = null;
-            Tracks.Clear();
-        }
-
-
-        private async Task CreateArtistAsync()
-        {
-            await _service.CreateArtistAsync(NewArtistName);
-            NewArtistName = "";
-            ArtistsChanged?.Invoke();
-        }
-
-        private async Task UpdateArtistAsync()
-        {
-            await _service.UpdateArtistAsync(
-                SelectedArtist!.ArtistId,
-                EditArtistName
-            );
-            ArtistsChanged?.Invoke();
-        }
-
-        private async Task DeleteArtistAsync()
-        {
-            try
-            {
-                await _service.DeleteArtistAsync(SelectedArtist!.ArtistId);
-                SelectedArtist = null;
-
-                ArtistsChanged?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Kan inte ta bort artist");
-            }
         }
 
     }
