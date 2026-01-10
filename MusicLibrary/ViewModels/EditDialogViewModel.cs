@@ -299,18 +299,18 @@ public class EditDialogViewModel : BaseViewModel
         _owner = owner;
 
         ConfirmCommand = new RelayCommand(_ => ConfirmAsync(), _ => !IsBusy);
-        SearchTracksCommand = new RelayCommand(async _ => await ApplySearchAndReloadAsync());
-        ClearSearchCommand = new RelayCommand(async _ => await ClearSearchAndReloadAsync());
+        SearchTracksCommand = new RelayCommand(_ => ApplySearchAndReloadAsync());
+        ClearSearchCommand = new RelayCommand(_ => ClearSearchAndReloadAsync());
 
-        SearchArtistsCommand = new RelayCommand(async _ => await ApplyArtistSearchAndReloadAsync());
-        ClearArtistSearchCommand = new RelayCommand(async _ => await ClearArtistSearchAndReloadAsync());
+        SearchArtistsCommand = new RelayCommand(_ => ApplyArtistSearchAndReloadAsync());
+        ClearArtistSearchCommand = new RelayCommand(_ => ClearArtistSearchAndReloadAsync());
 
-        AddTrackCommand = new RelayCommand(async _ => await AddTrackToPlaylistAsync(),
+        AddTrackCommand = new RelayCommand(_ => AddTrackToPlaylistAsync(),
             _ => IsUpdatePlaylist &&
                  SelectedSelectorItem is Playlist &&
                  SelectedLibraryTrack != null);
 
-        RemoveTrackCommand = new RelayCommand(async _ => await RemoveTrackFromPlaylistAsync(),
+        RemoveTrackCommand = new RelayCommand(_ => RemoveTrackFromPlaylistAsync(),
             _ => IsUpdatePlaylist &&
                  SelectedSelectorItem is Playlist &&
                  SelectedPlaylistTrack != null);

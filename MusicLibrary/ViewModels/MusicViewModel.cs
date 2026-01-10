@@ -53,22 +53,22 @@ namespace MusicLibrary.ViewModels
             _openDialogAndRefresh = openDialogAndRefresh;
 
             // Add
-            AddPlaylistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Add, EntityType.Playlist));
-            AddArtistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Add, EntityType.Artist));
-            AddAlbumDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Add, EntityType.Album));
-            AddTrackDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Add, EntityType.Track));
+            AddPlaylistDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Add, EntityType.Playlist));
+            AddArtistDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Add, EntityType.Artist));
+            AddAlbumDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Add, EntityType.Album));
+            AddTrackDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Add, EntityType.Track));
 
             // Update
-            UpdatePlaylistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Update, EntityType.Playlist));
-            UpdateArtistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Update, EntityType.Artist));
-            UpdateAlbumDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Update, EntityType.Album));
-            UpdateTrackDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Update, EntityType.Track));
+            UpdatePlaylistDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Update, EntityType.Playlist));
+            UpdateArtistDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Update, EntityType.Artist));
+            UpdateAlbumDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Update, EntityType.Album));
+            UpdateTrackDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Update, EntityType.Track));
 
             // Delete
-            DeletePlaylistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Delete, EntityType.Playlist));
-            DeleteArtistDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Delete, EntityType.Artist));
-            DeleteAlbumDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Delete, EntityType.Album));
-            DeleteTrackDialogCommand = new RelayCommand(async _ => await _openDialogAndRefresh(CrudMode.Delete, EntityType.Track));
+            DeletePlaylistDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Delete, EntityType.Playlist));
+            DeleteArtistDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Delete, EntityType.Artist));
+            DeleteAlbumDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Delete, EntityType.Album));
+            DeleteTrackDialogCommand = new RelayCommand(_ => _openDialogAndRefresh(CrudMode.Delete, EntityType.Track));
 
 
 
@@ -297,7 +297,7 @@ namespace MusicLibrary.ViewModels
             OnPropertyChanged(nameof(Tracks));
         }
 
-        private async void CreatePlaylistAsync()
+        private async Task CreatePlaylistAsync()
         {
             var playlist = await _service.CreatePlaylistAsync(NewPlaylistName);
 
@@ -307,7 +307,7 @@ namespace MusicLibrary.ViewModels
             NewPlaylistName = string.Empty;
         }
 
-        private async void AddTrackToPlaylistAsync()
+        private async Task AddTrackToPlaylistAsync()
         {
             await _service.AddTrackToPlaylistAsync(
                 SelectedPlaylist!.PlaylistId,
@@ -317,7 +317,7 @@ namespace MusicLibrary.ViewModels
             await LoadTracksForSelectedPlaylistAsync();
         }
 
-        private async void UpdatePlaylistAsync()
+        private async Task UpdatePlaylistAsync()
         {
             await _service.UpdatePlaylistNameAsync(
                 SelectedPlaylist!.PlaylistId,
@@ -357,7 +357,7 @@ namespace MusicLibrary.ViewModels
             }
         }
 
-        private async void RemoveTrackFromPlaylistAsync()
+        private async Task RemoveTrackFromPlaylistAsync()
         {
             if (SelectedPlaylist == null || SelectedPlaylistTrack == null)
                 return;
@@ -370,7 +370,7 @@ namespace MusicLibrary.ViewModels
             SelectedPlaylistTrack = null;
         }
 
-        private async void DeletePlaylistAsync()
+        private async Task DeletePlaylistAsync()
         {
             var playlist = SelectedPlaylist;
             if (playlist == null)
@@ -385,14 +385,14 @@ namespace MusicLibrary.ViewModels
         }
 
 
-        private async void CreateArtistAsync()
+        private async Task CreateArtistAsync()
         {
             await _service.CreateArtistAsync(NewArtistName);
             NewArtistName = "";
             ArtistsChanged?.Invoke();
         }
 
-        private async void UpdateArtistAsync()
+        private async Task UpdateArtistAsync()
         {
             await _service.UpdateArtistAsync(
                 SelectedArtist!.ArtistId,
@@ -401,7 +401,7 @@ namespace MusicLibrary.ViewModels
             ArtistsChanged?.Invoke();
         }
 
-        private async void DeleteArtistAsync()
+        private async Task DeleteArtistAsync()
         {
             try
             {
