@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace MusicLibrary;
 
@@ -30,7 +31,12 @@ public partial class MusicContext : DbContext
     public virtual DbSet<Track> Tracks { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Data Source=localhost;Database=everyloop;Integrated Security=True;TrustServerCertificate=True;");
+    {
+        var config = new ConfigurationBuilder().AddUserSecrets<MusicContext>().Build();
+        var connectionString = config["ConnectionString"];
+        optionsBuilder.UseSqlServer(connectionString);
+    }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
