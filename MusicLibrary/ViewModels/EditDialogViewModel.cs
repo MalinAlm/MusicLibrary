@@ -409,7 +409,7 @@ public class EditDialogViewModel : BaseViewModel
         }
     }
 
-    private async void ConfirmAsync()
+    private async Task ConfirmAsync()
     {
         // stoppa dubbelkörning
         if (IsBusy)
