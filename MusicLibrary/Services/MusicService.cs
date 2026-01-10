@@ -104,6 +104,19 @@ namespace MusicLibrary.Services
                            .ToListAsync();
         }
 
+        public async Task<List<Artist>> GetArtistsTreeAsync()
+        {
+            using var db = new MusicContext();
+
+            return await db.Artists
+                .AsNoTracking()
+                .Include(a => a.Albums)
+                    .ThenInclude(al => al.Tracks)
+                .OrderBy(a => a.Name ?? "")
+                .ToListAsync();
+        }
+
+
         public async Task<Artist> CreateArtistAsync(string name)
         {
             using var db = new MusicContext();

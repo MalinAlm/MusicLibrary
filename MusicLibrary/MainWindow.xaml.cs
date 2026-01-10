@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MusicLibrary.ViewModels;
+﻿using MusicLibrary.ViewModels;
 using MusicLibrary.Views;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -33,29 +32,23 @@ public partial class MainWindow : Window
 
         await _vm.LoadDataAsync();    // playlists
         await _vm.LoadLibraryAsync(); // library tracks
-        LoadArtists();                // treeview
+        await LoadArtistsAsync();     // treeview (NU async)
 
-        // ladda om tracks
         if (selectedPlaylistId != null)
         {
             _vm.SelectedPlaylist = _vm.Playlists.FirstOrDefault(p => p.PlaylistId == selectedPlaylistId);
             if (_vm.SelectedPlaylist != null)
-                await _vm.LoadMoreTracksAsync(); // laddar första sidan
+                await _vm.LoadMoreTracksAsync();
         }
     }
 
-    private void LoadArtists()
+
+    private async Task LoadArtistsAsync()
     {
-        using var db = new MusicContext();
-
-        var artists = db.Artists
-            .Include(a => a.Albums)
-                .ThenInclude(al => al.Tracks)
-            .OrderBy(a => a.Name ?? "")
-            .ToList();
-
+        var artists = await _vm.LoadArtistsTreeAsync();
         myTreeView.ItemsSource = new ObservableCollection<Artist>(artists);
     }
+
 
     private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {

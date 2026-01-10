@@ -276,6 +276,10 @@ namespace MusicLibrary.ViewModels
                 LibraryTracks.Add(t);
         }
 
+        public Task<List<Artist>> LoadArtistsTreeAsync()
+              => _service.GetArtistsTreeAsync();
+
+
 
         private async Task LoadTracksForSelectedPlaylistAsync()
         {
