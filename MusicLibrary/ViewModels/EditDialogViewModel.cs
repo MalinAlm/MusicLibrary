@@ -98,7 +98,7 @@ public class EditDialogViewModel : BaseViewModel
 
     public ObservableCollection<Artist> ArtistsAvailableToSelect { get; } = new();
 
-    // Användarinput
+
     private string artistSearchTextUserIsTyping = "";
     public string ArtistSearchTextUserIsTyping
     {
@@ -106,7 +106,7 @@ public class EditDialogViewModel : BaseViewModel
         set { artistSearchTextUserIsTyping = value; RaisePropertyChanged(); }
     }
 
-    // DB söktext
+
     private string? activeArtistSearchText = null;
     private string? ActiveArtistSearchText
     {
@@ -114,7 +114,7 @@ public class EditDialogViewModel : BaseViewModel
         set { activeArtistSearchText = value; }
     }
 
-    // Listan som visas i selector när Entity = Track
+
     public ObservableCollection<Track> TracksAvailableToSelect { get; } = new();
 
     private string trackSearchTextInSelector = "";
@@ -383,7 +383,7 @@ public class EditDialogViewModel : BaseViewModel
         {
             Name = p.Name ?? "";
 
-            // Vid Update Playlist: ladda bibliotek + playlist tracks
+
             if (Mode == CrudMode.Update)
             {
                 _ = LoadLibraryAlbumsOnceAsync();
@@ -516,55 +516,71 @@ public class EditDialogViewModel : BaseViewModel
         _ => "apply changes to"
     };
 
-    // Beskriv det som kommer att påverkas (för dialogtexten)
+
+    private static string Fallback(string? value, string fallback)
+    => string.IsNullOrWhiteSpace(value) ? fallback : value;
+
+
     private string GetPendingItemDescription()
     {
-        // Update/Delete: beskriv valt item
-        if (Mode != CrudMode.Add)
+
+        if (Mode == CrudMode.Delete)
             return GetSelectedItemDescriptionForDialog();
 
-        // Add: bygg från inputfält
-        return Entity switch
+
+        if (Mode == CrudMode.Add)
         {
-            EntityType.Playlist => $"Playlist: {Name}",
+            return Entity switch
+            {
+                EntityType.Playlist =>
+                    $"Playlist:\nName: {Fallback(Name, "(empty)")}",
 
-            EntityType.Artist => string.IsNullOrWhiteSpace(NewAlbumTitle)
-                ? $"Artist: {Name}"
-                : $"Artist: {Name}\nCreate album: {NewAlbumTitle}",
+            EntityType.Artist =>
+                string.IsNullOrWhiteSpace(NewAlbumTitle)
+                    ? $"Artist:\nName: {Fallback(Name, "(empty)")}"
+                    : $"Artist:\nName: {Fallback(Name, "(empty)")}\nCreate album: {NewAlbumTitle}",
 
-            EntityType.Album => $"Album: {Name}\nArtist: {SelectedArtistForAlbum?.Name ?? "(none)"}",
+            EntityType.Album =>
+                $"Album:\nTitle: {Fallback(Name, "(empty)")}\nArtist: {SelectedArtistForAlbum?.Name ?? "(none)"}",
 
-            EntityType.Track => $"Track: {Name}\nLength (ms): {MillisecondsText}\nAlbum: {SelectedAlbum?.Title ?? "(No album)"}",
+            EntityType.Track =>
+                $"Track:\nName: {Fallback(Name, "(empty)")}\nLength (ms): {Fallback(MillisecondsText, "(empty)")}\nAlbum: {SelectedAlbum?.Title ?? "(No album)"}",
 
-            _ => Name
-        };
-    }
+            _ => Fallback(Name, "(empty)")
+            };
+        }
 
-
-    //private bool UserConfirmedDelete(string itemDescription)
-    //{
-    //    var confirmDialog = new ConfirmDialog(
-    //        dialogTitle: "Confirm delete",
-    //        messageText: $"Are you sure you want to delete:\n\n{itemDescription}?",
-    //        okButtonText: "Delete",
-    //        cancelButtonText: "Cancel")
-    //    {
-    //        Owner = _owner
-    //    };
-
-    //    return confirmDialog.ShowDialog() == true;
-    //}
-
-    private void ShowDeleteSuccess(string itemDescription)
-    {
-        var infoDialog = new InfoDialog(
-            dialogTitle: "Deleted",
-            messageText: $"Deleted:\n\n{itemDescription}")
+        if (Mode == CrudMode.Update)
         {
-            Owner = _owner
-        };
+            if (SelectedSelectorItem == null)
+                return "(No item selected)";
 
-        infoDialog.ShowDialog();
+            return Entity switch
+            {
+                EntityType.Playlist when SelectedSelectorItem is Playlist p =>
+                    "Playlist:\n" +
+                    $"Name: {Fallback(p.Name, "(No name)")} → {Fallback(Name, "(empty)")}",
+
+                EntityType.Artist when SelectedSelectorItem is Artist a =>
+                    "Artist:\n" +
+                    $"Name: {Fallback(a.Name, "(No name)")} → {Fallback(Name, "(empty)")}",
+
+                EntityType.Album when SelectedSelectorItem is Album al =>
+                    "Album:\n" +
+                    $"Title: {Fallback(al.Title, "(No title)")} → {Fallback(Name, "(empty)")}\n" +
+                    $"Artist: {al.Artist?.Name ?? "(Unknown artist)"} → {SelectedArtistForAlbum?.Name ?? "(none)"}",
+
+                EntityType.Track when SelectedSelectorItem is Track t =>
+                    "Track:\n" +
+                    $"Name: {Fallback(t.Name, "(No name)")} → {Fallback(Name, "(empty)")}\n" +
+                    $"Length (ms): {t.Milliseconds} → {Fallback(MillisecondsText, "(empty)")}\n" +
+                    $"Album: {t.Album?.Title ?? "(No album)"} → {SelectedAlbum?.Title ?? "(No album)"}",
+
+                _ => SelectedSelectorItem.ToString() ?? ""
+            };
+        }
+
+        return "";
     }
 
 
@@ -588,7 +604,7 @@ public class EditDialogViewModel : BaseViewModel
 
             await _service.UpdatePlaylistNameAsync(p.PlaylistId, Name);
         }
-        else // Delete
+        else 
         {
             if (SelectedSelectorItem is not Playlist p)
                 throw new InvalidOperationException("Select a playlist.");
@@ -622,7 +638,7 @@ public class EditDialogViewModel : BaseViewModel
 
             await _service.UpdateArtistAsync(a.ArtistId, Name);
         }
-        else // Delete
+        else 
         {
             if (SelectedSelectorItem is not Artist a)
                 throw new InvalidOperationException("Select an artist.");
@@ -661,7 +677,7 @@ public class EditDialogViewModel : BaseViewModel
         }
     }
 
-    // ---- Track CRUD (enklare: name + ms + album) ----
+    // ---- Track CRUD ----
     private async Task DoTrackAsync()
     {
         if (Mode == CrudMode.Delete)
@@ -696,7 +712,7 @@ public class EditDialogViewModel : BaseViewModel
                 composer: null
             );
         }
-        else // Update
+        else 
         {
             if (SelectedSelectorItem is not Track track)
                 throw new InvalidOperationException("Select a track.");
