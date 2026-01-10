@@ -29,12 +29,21 @@ public partial class MainWindow : Window
 
     private async Task RefreshAllAsync()
     {
+        var selectedPlaylistId = _vm.SelectedPlaylist?.PlaylistId;
+
         await _vm.LoadDataAsync();    // playlists
         await _vm.LoadLibraryAsync(); // library tracks
         LoadArtists();                // treeview
+
+        // ladda om tracks
+        if (selectedPlaylistId != null)
+        {
+            _vm.SelectedPlaylist = _vm.Playlists.FirstOrDefault(p => p.PlaylistId == selectedPlaylistId);
+            if (_vm.SelectedPlaylist != null)
+                await _vm.LoadMoreTracksAsync(); // laddar första sidan
+        }
     }
 
-    // --- TreeView load (som ni redan har) ---
     private void LoadArtists()
     {
         using var db = new MusicContext();

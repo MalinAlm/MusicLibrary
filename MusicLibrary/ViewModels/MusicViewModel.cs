@@ -254,10 +254,18 @@ namespace MusicLibrary.ViewModels
 
         public async Task LoadDataAsync()
         {
+            var selectedId = SelectedPlaylist?.PlaylistId;
+
             Playlists.Clear();
             var playlists = await _service.GetPlaylistsAsync();
             foreach (var p in playlists)
                 Playlists.Add(p);
+
+            if (selectedId != null)
+            {
+                SelectedPlaylist = Playlists.FirstOrDefault(p => p.PlaylistId == selectedId);
+                OnPropertyChanged(nameof(SelectedPlaylist));
+            }
         }
 
         public async Task LoadLibraryAsync()
@@ -353,11 +361,6 @@ namespace MusicLibrary.ViewModels
                 SelectedPlaylist.PlaylistId,
                 SelectedPlaylistTrack.TrackId
             );
-
-            await _service.RemoveTrackFromPlaylistAsync(
-             SelectedPlaylist.PlaylistId,
-             SelectedPlaylistTrack.TrackId
-         );
 
             Tracks.Remove(SelectedPlaylistTrack);
             SelectedPlaylistTrack = null;
