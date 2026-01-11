@@ -125,10 +125,10 @@
                                            Focusable="True"
                                            ToolTipService.ShowDuration="60000"
                                            AutomationProperties.Name="Information"
-                                           AutomationProperties.HelpText="Double click track to add to playlist">
+                                           AutomationProperties.HelpText="Select an artist and an album, then double click a track to add to playlist">
                                     <TextBlock.ToolTip>
                                         <ToolTip Placement="Mouse">
-                                            <TextBlock Text="Double click track to add to playlist"/>
+                                            <TextBlock Text="Select an artist and an album, then double click a track to add to playlist"/>
                                         </ToolTip>
                                     </TextBlock.ToolTip>
                              </TextBlock>

@@ -111,10 +111,6 @@
 
                 <StackPanel Margin="0,0,0,10" Grid.Row="2"
                             Visibility="{Binding IsAlbum, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <TextBlock Text="Artist" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding Artists}"
-                              SelectedItem="{Binding SelectedArtistForAlbum}"
-                              DisplayMemberPath="Name"/>
                 </StackPanel>
 
                 <StackPanel Margin="0,0,0,10" Grid.Row="2"
@@ -127,20 +123,6 @@
                 <!-- Track fields -->
                 <StackPanel Grid.Row="2"
                             Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}">
-
-                    <StackPanel Margin="0,0,0,10">
-                        <TextBlock Text="Length min/sec (mm:ss)" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding MillisecondsText, UpdateSourceTrigger=PropertyChanged}"/>
-                    </StackPanel>
-
-                    <StackPanel Margin="0,0,0,10">
-                        <TextBlock Text="Album (optional)" Margin="0,0,0,4"/>
-
-                        <ComboBox ItemsSource="{Binding Albums}"
-                                  SelectedItem="{Binding SelectedAlbum}"
-                                  DisplayMemberPath="Title"/>
-                    </StackPanel>
-
                 </StackPanel>
 
                 <TextBlock Grid.Row="3"

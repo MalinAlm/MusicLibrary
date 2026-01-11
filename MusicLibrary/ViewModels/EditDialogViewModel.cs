@@ -57,10 +57,10 @@ public class EditDialogViewModel : BaseViewModel
 
     public string SelectorLabel => Entity switch
     {
-        EntityType.Playlist => "Select playlist",
-        EntityType.Artist => "Select artist",
-        EntityType.Album => "Select album",
-        _ => "Select track"
+        EntityType.Playlist => "Select playlist to edit",
+        EntityType.Artist => "Select artist to edit",
+        EntityType.Album => "Select album to edit",
+        _ => "Select track to edit"
     };
 
     private IList _selectorItems = new ArrayList();
@@ -190,11 +190,11 @@ public class EditDialogViewModel : BaseViewModel
 
     public string NameLabel => Entity switch
     {
-        EntityType.Playlist => "Playlist name",
-        EntityType.Artist => "Artist name",
-        EntityType.Album => "Album title",
-        EntityType.Track => "Track name",
-        _ => "Name"
+        EntityType.Playlist => "Edit playlist name",
+        EntityType.Artist => "Edit artist name",
+        EntityType.Album => "Edit album title",
+        EntityType.Track => "Edit track name",
+        _ => "Edit name"
     };
 
     private string _name = "";
