@@ -4,6 +4,8 @@ Welcome to **PALT Factory Music App**, a desktop application for managing music 
 
 The application is built using modern Microsoft technologies and follows a database-first approach.
 
+School project made by: Malin Almqvist & Desirée Skönneberg
+
 ---
 
 ## 🛠 Tech Stack
