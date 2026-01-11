@@ -37,7 +37,7 @@
                     <StackPanel Orientation="Horizontal"
                                 Margin="0,0,0,6"
                                 Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBox Width="280"
+                        <TextBox Width="228"
                                  Text="{Binding TrackSearchTextUserIsTyping, UpdateSourceTrigger=PropertyChanged}"
                                  KeyDown="SearchBox_KeyDown"/>
                         <Button Content="Sök"
@@ -52,7 +52,7 @@
                     <StackPanel Orientation="Horizontal"
                                 Margin="0,0,0,6"
                                 Visibility="{Binding IsArtistSelectorVisible, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBox Width="280"
+                        <TextBox Width="228"
                                  Text="{Binding ArtistSearchTextUserIsTyping, UpdateSourceTrigger=PropertyChanged}"
                                  KeyDown="ArtistSearchBox_KeyDown"/>
                         <Button Content="Sök"
