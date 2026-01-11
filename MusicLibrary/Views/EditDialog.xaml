@@ -129,7 +129,7 @@
                             Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}">
 
                     <StackPanel Margin="0,0,0,10">
-                        <TextBlock Text="Length (mm:ss)" Margin="0,0,0,4"/>
+                        <TextBlock Text="Length min/sec (mm:ss)" Margin="0,0,0,4"/>
                         <TextBox Text="{Binding MillisecondsText, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
 
