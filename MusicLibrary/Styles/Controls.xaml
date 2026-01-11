@@ -4,9 +4,9 @@
 
     <!-- COLORS / BAS -->
 
-    <Color x:Key="PrimaryColor">#2D6CDF</Color>
-    <Color x:Key="PrimaryHoverColor">#1F57C3</Color>
-    <Color x:Key="PrimaryPressedColor">#1846A1</Color>
+    <Color x:Key="PrimaryColor">#8858FF</Color>
+    <Color x:Key="PrimaryHoverColor">#8858FF</Color>
+    <Color x:Key="PrimaryPressedColor">#8858FF</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
     <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{StaticResource PrimaryHoverColor}" />
@@ -20,6 +20,7 @@
         <Setter Property="MinWidth" Value="90"/>
         <Setter Property="Padding" Value="12,4"/>
         <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -30,7 +31,8 @@
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="border"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="4">
+                            CornerRadius="4"
+                            Opacity="0.68">
                         <ContentPresenter
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"/>
@@ -39,20 +41,20 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="border"
-                                    Property="Background"
-                                    Value="{StaticResource PrimaryHoverBrush}"/>
+                                    Property="Opacity"
+                                    Value="0.45"/>
                         </Trigger>
 
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="border"
-                                    Property="Background"
-                                    Value="{StaticResource PrimaryPressedBrush}"/>
+                                    Property="Opacity"
+                                    Value="0.25"/>
                         </Trigger>
 
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="border"
                                     Property="Opacity"
-                                    Value="0.5"/>
+                                    Value="0.2"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -68,6 +70,144 @@
            BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="#E0E0E0"/>
         <Setter Property="Foreground" Value="Black"/>
+    </Style>
+
+
+    <!-- LIST / TREE BRUSHES -->
+
+    <LinearGradientBrush x:Key="ListBackgroundGradient"
+                         StartPoint="0,0"
+                         EndPoint="0,1"
+                         Opacity="0.22">
+                     
+        <GradientStop Color="#FDF9FF" Offset="0"/>
+        <GradientStop Color="#8858FF" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ListSelectionGradient"
+                         StartPoint="0,0"
+                         EndPoint="0,1"
+                         Opacity="0.22">
+        <GradientStop Color="#FDF9FF" Offset="0"/>
+        <GradientStop Color="#8858FF" Offset="1"/>
+    </LinearGradientBrush>
+
+ 
+    <!-- GLOBAL LISTBOX -->
+
+    <Style TargetType="ListBox">
+        <Setter Property="Background" Value="{StaticResource ListBackgroundGradient}"/>
+        <Setter Property="BorderBrush" Value="#D0D0D0"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="4"/>
+    </Style>
+
+    <Style TargetType="ListBoxItem">
+        <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="Background" Value="Transparent"/>
+
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background"
+                        Value="{StaticResource ListSelectionGradient}"/>
+            </Trigger>
+
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E9F1FF"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+
+    <!-- GLOBAL TREEVIEW -->
+
+    <Style TargetType="TreeView">
+        <Setter Property="Background" Value="{StaticResource ListBackgroundGradient}"/>
+        <Setter Property="BorderBrush" Value="#D0D0D0"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <Style TargetType="TreeViewItem">
+        <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="Background" Value="Transparent"/>
+
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background"
+                        Value="{StaticResource ListSelectionGradient}"/>
+            </Trigger>
+
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E9F1FF"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- DATAGRID ROW COLORS -->
+
+
+    <SolidColorBrush x:Key="GridRowPrimaryBrush" Color="#FDF9FF"/>
+    <SolidColorBrush x:Key="GridRowAlternateBrush" Color="#C8B2FF" Opacity="0.31"/>
+
+    <!-- DATAGRID ROWS -->
+
+    <Style TargetType="DataGridRow">
+        <!-- Minsta höjd på varje rad -->
+        <Setter Property="MinHeight" Value="30"/>
+
+        <!-- Vertikal centrering av innehåll -->
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+
+    <!-- DATAGRID LINE COLOR -->
+
+    <SolidColorBrush x:Key="GridLineBrush" Color="#C0C0C0"/>
+
+    <!-- GLOBAL DATAGRID -->
+
+    <Style TargetType="DataGrid">
+        <!-- Rutlinjer -->
+        <Setter Property="GridLinesVisibility" Value="All"/>
+        <Setter Property="HorizontalGridLinesBrush"
+                Value="{StaticResource GridLineBrush}"/>
+        <Setter Property="VerticalGridLinesBrush"
+                Value="{StaticResource GridLineBrush}"/>
+
+        <!-- Ytterkant -->
+        <Setter Property="BorderBrush"
+                Value="{StaticResource GridLineBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+
+        <!-- Radfärger -->
+        <Setter Property="RowBackground"
+                Value="{StaticResource GridRowPrimaryBrush}"/>
+        <Setter Property="AlternatingRowBackground"
+                Value="{StaticResource GridRowAlternateBrush}"/>
+    </Style>
+
+    <!-- DATAGRID COLUMN HEADERS -->
+
+    <Style TargetType="DataGridColumnHeader">
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Background" Value="#FFFFFF"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="BorderBrush"
+                Value="{StaticResource GridLineBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+    
+    <!-- DATAGRID CELLS -->
+
+    <Style TargetType="DataGridCell">
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Margin" Value="0 5 0 0"/>
+        <Setter Property="BorderThickness" Value="0"/>
     </Style>
 
 </ResourceDictionary>

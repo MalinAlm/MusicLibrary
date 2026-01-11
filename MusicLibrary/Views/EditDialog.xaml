@@ -15,7 +15,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- TOP: selector + name + ev track fields -->
+        <!-- TOP: selector + name + track fields -->
         <StackPanel Grid.Row="0" Width="420">
             <Grid>
                 <Grid.RowDefinitions>
@@ -26,7 +26,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Välj befintlig (Update/Delete) -->
+                <!-- Update/Delete -->
                 <StackPanel Grid.Row="0"
                             Margin="0,0,0,10"
                             Visibility="{Binding ShowSelector, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -63,7 +63,7 @@
                                 Command="{Binding ClearArtistSearchCommand}"/>
                     </StackPanel>
 
-                    <!-- EN selector-lista som funkar för Track/Artist/Playlist -->
+                    <!-- Selector-lista för Track/Artist/Playlist -->
                     <ListBox ItemsSource="{Binding SelectorItems}"
                              SelectedItem="{Binding SelectedSelectorItem}"
                              Height="180"
@@ -124,12 +124,12 @@
                 </StackPanel>
 
 
-                <!-- Track fields (syns bara när Entity == Track) -->
+                <!-- Track fields -->
                 <StackPanel Grid.Row="2"
-                 Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}">
+                            Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}">
 
                     <StackPanel Margin="0,0,0,10">
-                        <TextBlock Text="Length (ms)" Margin="0,0,0,4"/>
+                        <TextBlock Text="Length (mm:ss)" Margin="0,0,0,4"/>
                         <TextBox Text="{Binding MillisecondsText, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
 

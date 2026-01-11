@@ -15,6 +15,7 @@
 
             <conv:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <conv:MillisecondsToMmSsConverter x:Key="MillisecondsToMmSsConverter"/>
 
         </ResourceDictionary>
 

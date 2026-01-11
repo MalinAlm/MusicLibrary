@@ -212,6 +212,47 @@ public class EditDialogViewModel : BaseViewModel
         set { _millisecondsText = value; RaisePropertyChanged(); }
     }
 
+    private static string FormatMsToMmSs(int ms)
+    {
+        if (ms < 0) return "";
+        var ts = TimeSpan.FromMilliseconds(ms);
+        return $"{(int)ts.TotalMinutes}:{ts.Seconds:D2}";
+    }
+
+    private static bool TryParseMmSsToMs(string? input, out int milliseconds)
+    {
+        milliseconds = 0;
+
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+
+        input = input.Trim();
+
+        // Tillåt även om någon råkar skriva t.ex. "03:45"
+        var parts = input.Split(':');
+        if (parts.Length != 2)
+            return false;
+
+        if (!int.TryParse(parts[0], out var minutes))
+            return false;
+
+        if (!int.TryParse(parts[1], out var seconds))
+            return false;
+
+        if (minutes < 0 || seconds < 0 || seconds > 59)
+            return false;
+
+        var ts = TimeSpan.FromMinutes(minutes) + TimeSpan.FromSeconds(seconds);
+
+        var totalMs = ts.TotalMilliseconds;
+        if (totalMs > int.MaxValue)
+            return false;
+
+        milliseconds = (int)totalMs;
+        return true;
+    }
+
+
     public ObservableCollection<Album> Albums { get; } = new();
 
     private Album? _selectedAlbum;
@@ -397,7 +438,7 @@ public class EditDialogViewModel : BaseViewModel
         else if (Entity == EntityType.Track && SelectedSelectorItem is Track selectedTrack)
         {
             Name = selectedTrack.Name ?? "";
-            MillisecondsText = selectedTrack.Milliseconds.ToString();
+            MillisecondsText = FormatMsToMmSs(selectedTrack.Milliseconds);
 
             SelectedAlbum = Albums.FirstOrDefault(album => album.AlbumId == selectedTrack.AlbumId);
             SelectedMediaType = MediaTypes.FirstOrDefault(mediaType => mediaType.MediaTypeId == selectedTrack.MediaTypeId);
@@ -692,8 +733,8 @@ public class EditDialogViewModel : BaseViewModel
         if (string.IsNullOrWhiteSpace(Name))
             throw new InvalidOperationException("Track name is required.");
 
-        if (!int.TryParse(MillisecondsText, out var ms) || ms < 0)
-            throw new InvalidOperationException("Length (ms) must be a non-negative number.");
+        if (!TryParseMmSsToMs(MillisecondsText, out var ms))
+            throw new InvalidOperationException("Length must be in format mm:ss (e.g. 3:45).");
 
         var albumId = SelectedAlbum?.AlbumId;
         var genreId = (int?)null;

@@ -104,7 +104,7 @@
                 <Border 
                         BorderBrush="LightGray"
                         BorderThickness="1"
-                        Margin="5">     
+                        Margin="5">
                     <DockPanel>
                         <Grid>
                             <Grid.RowDefinitions>
@@ -112,10 +112,10 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <StackPanel Grid.Row="0" Orientation="Horizontal">
-                            <TextBlock Text="Artists"
-                                 FontWeight="Bold"
-                                 Padding="5"
-                                 DockPanel.Dock="Top"/>
+                                <TextBlock  Text="Artists"
+                                            FontWeight="Bold"
+                                            Padding="5"
+                                            DockPanel.Dock="Top"/>
                                 <TextBlock Grid.Column="1"
                                            Text="ⓘ"
                                            FontSize="20"
@@ -135,23 +135,23 @@
 
                             </StackPanel>
                             <TreeView x:Name="myTreeView"
-                                  SelectedItemChanged="TreeView_SelectedItemChanged" Margin="5" Grid.Row="1" MouseDoubleClick="TreeView_MouseDoubleClick">
-                            <TreeView.Resources>
-                                <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
-                                    <TextBlock>
+                                      SelectedItemChanged="TreeView_SelectedItemChanged" Margin="5" Grid.Row="1" MouseDoubleClick="TreeView_MouseDoubleClick">
+                                <TreeView.Resources>
+                                    <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
+                                        <TextBlock>
                                          <Run Text="{Binding Name}" />
                                          <Run Text=" (" /><Run Text="{Binding Albums.Count, Mode=OneWay}" />
-                                         <Run Text=" albums)" />        
-                                    </TextBlock>
-                                </HierarchicalDataTemplate>
-                                <HierarchicalDataTemplate DataType="{x:Type model:Album}" ItemsSource="{Binding Tracks}">
-                                    <TextBlock Text="{Binding Title}" />
-                                </HierarchicalDataTemplate>
-                                <HierarchicalDataTemplate DataType="{x:Type model:Track}">
-                                    <TextBlock Text="{Binding Name}" />
-                                </HierarchicalDataTemplate>
-                            </TreeView.Resources>
-                        </TreeView>
+                                         <Run Text=" albums)" />
+                                        </TextBlock>
+                                    </HierarchicalDataTemplate>
+                                    <HierarchicalDataTemplate DataType="{x:Type model:Album}" ItemsSource="{Binding Tracks}">
+                                        <TextBlock Text="{Binding Title}" />
+                                    </HierarchicalDataTemplate>
+                                    <HierarchicalDataTemplate DataType="{x:Type model:Track}">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </HierarchicalDataTemplate>
+                                </TreeView.Resources>
+                            </TreeView>
 
                         </Grid>
                     </DockPanel>
@@ -159,61 +159,69 @@
                 </Border>
             </Grid>
 
-            <!-- RIGHT -->
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+            <!-- RIGHT Tracks in playlist-->
+            <Border Grid.Column="2"
+                    BorderBrush="LightGray"
+                    BorderThickness="1"
+                    Margin="5">
 
-                <DataGrid x:Name="myDataGrid"
-                          Grid.Row="1"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="False"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          CanUserResizeColumns="False"
-                          CanUserResizeRows="False"
-                          CanUserReorderColumns="False"
-                          CanUserSortColumns="True"
-                          SelectionMode="Extended"
-                          SelectionUnit="CellOrRowHeader"
-                          RowHeaderWidth="28"
-                          HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Auto"
-                          AlternationCount="2"
-                          RowBackground="White"
-                          AlternatingRowBackground="NavajoWhite"
-                          ItemsSource="{Binding Tracks}"
-                          ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"
-                          IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
-                          SelectedItem="{Binding SelectedPlaylistTrack, Mode=TwoWay}">
+                <DockPanel>
+                    <TextBlock Text="Tracks in playlist"
+                               FontWeight="Bold"
+                               Padding="5"
+                               DockPanel.Dock="Top"/>
 
-                    <DataGrid.RowHeaderStyle>
-                        <Style TargetType="DataGridRowHeader">
-                            <Setter Property="Content" Value="🗑"/>
-                            <Setter Property="ToolTip" Value="Ta bort låt från playlist"/>
-                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                            <Setter Property="Cursor" Value="Hand"/>
-                            <Setter Property="Foreground" Value="DarkRed"/>
-                            <Setter Property="Padding" Value="5"/>
-                            <EventSetter Event="PreviewMouseLeftButtonDown"
-                                         Handler="RowHeader_DeleteClicked"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Foreground" Value="Red"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGrid.RowHeaderStyle>
+                    <DataGrid x:Name="myDataGrid"
+                              Margin="5"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserResizeColumns="False"
+                              CanUserResizeRows="False"
+                              CanUserReorderColumns="False"
+                              CanUserSortColumns="True"
+                              SelectionMode="Extended"
+                              SelectionUnit="CellOrRowHeader"
+                              RowHeaderWidth="28"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto"
+                              AlternationCount="2"
+                              ItemsSource="{Binding Tracks}"
+                              ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"
+                              IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
+                              SelectedItem="{Binding SelectedPlaylistTrack, Mode=TwoWay}">
 
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Track" Binding="{Binding Name}" FontStyle="Italic" Width="*"/>
-                        <DataGridTextColumn Header="Album" Binding="{Binding Album.Title}" Width="*"/>
-                        <DataGridTextColumn Header="Length (ms)" Binding="{Binding Milliseconds}" Width="Auto"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Grid>
+                        <DataGrid.RowHeaderStyle>
+                            <Style TargetType="DataGridRowHeader">
+                                <Setter Property="Content" Value="🗑"/>
+                                <Setter Property="ToolTip" Value="Ta bort låt från playlist"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Foreground" Value="#686868"/>
+                                <Setter Property="Padding" Value="5"/>
+                                <EventSetter Event="PreviewMouseLeftButtonDown"
+                                             Handler="RowHeader_DeleteClicked"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="DarkRed" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowHeaderStyle>
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Track" Binding="{Binding Name}" FontStyle="Italic" Width="*"/>
+                            <DataGridTextColumn Header="Album" Binding="{Binding Album.Title}" Width="*"/>
+                            <DataGridTextColumn Header="Length"
+                                                Binding="{Binding Milliseconds, Converter={StaticResource MillisecondsToMmSsConverter}}"
+                                                Width="Auto"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+
+            </Border>
+
         </Grid>
     </Grid>
 </Window>
