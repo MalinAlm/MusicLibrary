@@ -51,9 +51,15 @@ public class EditDialogViewModel : BaseViewModel
     public bool IsAlbum => Entity == EntityType.Album;
     public bool ShowAlbumOnAddArtist => Entity == EntityType.Artist && Mode == CrudMode.Add;
     public bool ShowAlbumArtistSelector => Entity == EntityType.Album && Mode != CrudMode.Delete;
+    public bool ShowName => Mode is CrudMode.Add or CrudMode.Update;
+    public bool ShowTrackLength => Entity == EntityType.Track && Mode is CrudMode.Add or CrudMode.Update;
+    public bool ShowSelector => !_forceHideSelector && Mode != CrudMode.Add;
+    public bool ShowAlbumSelectorForTrack => Entity == EntityType.Track && Mode == CrudMode.Add && _context is null;
+    public bool ShowArtistSelectorForAlbum => Entity == EntityType.Album && Mode == CrudMode.Add && _context is null;
 
     // ---- Selector (Update/Delete) ----
-    public bool ShowSelector => Mode != CrudMode.Add;
+    private readonly bool _forceHideSelector;
+   
 
     public string SelectorLabel => Entity switch
     {
@@ -186,7 +192,6 @@ public class EditDialogViewModel : BaseViewModel
 
 
     // ---- Name field ----
-    public bool ShowName => Mode != CrudMode.Delete;
 
     public string NameLabel => Entity switch
     {
@@ -339,6 +344,7 @@ public class EditDialogViewModel : BaseViewModel
         Entity = entity;
         _owner = owner;
         _context = context;
+        _forceHideSelector = mode == CrudMode.Update && context != null; //kolla om den ligger rätt
 
         ConfirmCommand = new RelayCommand(parameter => ConfirmAsync(), _ => !IsBusy);
         SearchTracksCommand = new RelayCommand(parameter => ApplySearchAndReloadAsync());
@@ -364,6 +370,47 @@ public class EditDialogViewModel : BaseViewModel
     private async Task LoadAsync()
     {
         ErrorText = "";
+
+        // Förval när dialogen öppnas från TreeView/context-menu
+        if (_context != null)
+        {
+            // Add Album under Artist
+            if (Mode == CrudMode.Add && Entity == EntityType.Album && _context is Artist contextArtist)
+            {
+                SelectedArtistForAlbum = contextArtist;
+                return; // vi behöver inte ladda selector
+            }
+
+            // Add Track under Album
+            if (Mode == CrudMode.Add && Entity == EntityType.Track && _context is Album contextAlbum)
+            {
+                SelectedAlbum = contextAlbum;
+                return;
+            }
+
+            // Update från TreeView (förval exakt item)
+            if (Mode == CrudMode.Update && Entity == EntityType.Artist && _context is Artist contextArtistToEdit)
+            {
+                SelectedSelectorItem = contextArtistToEdit;
+                Name = contextArtistToEdit.Name ?? "";
+                return;
+            }
+
+            if (Mode == CrudMode.Update && Entity == EntityType.Album && _context is Album contextAlbumToEdit)
+            {
+                SelectedSelectorItem = contextAlbumToEdit;
+                Name = contextAlbumToEdit.Title ?? "";
+                return;
+            }
+
+            if (Mode == CrudMode.Update && Entity == EntityType.Track && _context is Track contextTrackToEdit)
+            {
+                SelectedSelectorItem = contextTrackToEdit;
+                Name = contextTrackToEdit.Name ?? "";
+                MillisecondsText = FormatMsToMmSs(contextTrackToEdit.Milliseconds);
+                return;
+            }
+        }
 
         if (ShowSelector)
         {
@@ -430,17 +477,7 @@ public class EditDialogViewModel : BaseViewModel
                 ErrorText = "No MediaTypes found in database.";
         }
 
-        
-        if (Mode == CrudMode.Add && Entity == EntityType.Album && _context is Artist ctxArtist)
-        {
-            SelectedArtistForAlbum = Artists.FirstOrDefault(a => a.ArtistId == ctxArtist.ArtistId);
-        }
-
-      
-        if (Mode == CrudMode.Add && Entity == EntityType.Track && _context is Album ctxAlbum)
-        {
-            SelectedAlbum = Albums.FirstOrDefault(a => a.AlbumId == ctxAlbum.AlbumId);
-        }
+  
 
         var mediaTypes = await _service.GetMediaTypesAsync();
         _defaultMediaTypeId = mediaTypes.FirstOrDefault()?.MediaTypeId;
@@ -455,38 +492,28 @@ public class EditDialogViewModel : BaseViewModel
         ErrorText = "";
         if (SelectedSelectorItem == null) return;
 
-        if (Entity == EntityType.Playlist && SelectedSelectorItem is Playlist p)
-        {
-            Name = p.Name ?? "";
-
-
-            if (Mode == CrudMode.Update)
-            {
-                _ = LoadLibraryAlbumsOnceAsync();
-                _ = ReloadPlaylistTracksAsync();
-            }
-        }
-        else if (Entity == EntityType.Artist && SelectedSelectorItem is Artist a)
+        if (Entity == EntityType.Artist && SelectedSelectorItem is Artist a)
         {
             Name = a.Name ?? "";
+            return;
         }
-        else if (Entity == EntityType.Track && SelectedSelectorItem is Track selectedTrack)
-        {
-            Name = selectedTrack.Name ?? "";
-            MillisecondsText = FormatMsToMmSs(selectedTrack.Milliseconds);
 
-            SelectedAlbum = Albums.FirstOrDefault(album => album.AlbumId == selectedTrack.AlbumId);
-            SelectedMediaType = MediaTypes.FirstOrDefault(mediaType => mediaType.MediaTypeId == selectedTrack.MediaTypeId);
-        }
-        else if (Entity == EntityType.Album && SelectedSelectorItem is Album al)
+        if (Entity == EntityType.Album && SelectedSelectorItem is Album al)
         {
             Name = al.Title ?? "";
-            SelectedArtistForAlbum = Artists.FirstOrDefault(x => x.ArtistId == al.ArtistId);
+            return;
+        }
+
+        if (Entity == EntityType.Track && SelectedSelectorItem is Track t)
+        {
+            Name = t.Name ?? "";
+            MillisecondsText = FormatMsToMmSs(t.Milliseconds);
         }
     }
 
     private async Task ConfirmAsync()
     {
+
         //prevent double execution
         if (IsBusy)
             return;
@@ -497,17 +524,15 @@ public class EditDialogViewModel : BaseViewModel
         {
             ErrorText = "";
 
-          
-            if (Entity == EntityType.Playlist)
-                await DoPlaylistAsync();
-            else if (Entity == EntityType.Artist)
-                await DoArtistAsync();
+            if (Entity == EntityType.Artist)
+                await AddOrUpdateArtistAsync();
             else if (Entity == EntityType.Album)
-                await DoAlbumAsync();
+                await AddOrUpdateAlbumAsync();
+            else if (Entity == EntityType.Track)
+                await AddOrUpdateTrackAsync();
             else
-                await DoTrackAsync();
+                throw new InvalidOperationException("Unsupported entity.");
 
-            
             _owner.DialogResult = true;
             _owner.Close();
         }
@@ -881,4 +906,83 @@ public class EditDialogViewModel : BaseViewModel
         await ResetArtistSelectorAndLoadFirstPageAsync();
     }
 
+    private async Task AddOrUpdateArtistAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Name))
+            throw new InvalidOperationException("Name is required.");
+
+        if (Mode == CrudMode.Add)
+        {
+            await _service.CreateArtistAsync(Name.Trim());
+            return;
+        }
+
+        if (SelectedSelectorItem is not Artist artist)
+            throw new InvalidOperationException("Select an artist.");
+
+        await _service.UpdateArtistAsync(artist.ArtistId, Name.Trim());
+    }
+
+    private async Task AddOrUpdateAlbumAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Name))
+            throw new InvalidOperationException("Album title is required.");
+
+        if (Mode == CrudMode.Add)
+        {
+           
+            if (SelectedArtistForAlbum == null)
+                throw new InvalidOperationException("Select an artist.");
+
+            await _service.CreateAlbumAsync(Name.Trim(), SelectedArtistForAlbum.ArtistId);
+            return;
+        }
+
+        if (SelectedSelectorItem is not Album album)
+            throw new InvalidOperationException("Select an album.");
+
+      
+        await _service.UpdateAlbumAsync(album.AlbumId, Name.Trim(), album.ArtistId);
+    }
+
+    private async Task AddOrUpdateTrackAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Name))
+            throw new InvalidOperationException("Track name is required.");
+
+        if (!TryParseMmSsToMs(MillisecondsText, out var milliseconds))
+            throw new InvalidOperationException("Length must be in format mm:ss (e.g. 3:45).");
+
+        if (Mode == CrudMode.Add)
+        {
+            int mediaTypeId = _defaultMediaTypeId ?? (await _service.GetMediaTypesAsync())
+                .FirstOrDefault()?.MediaTypeId
+                ?? throw new InvalidOperationException("No MediaType available in DB (cannot add track).");
+
+            var albumId = SelectedAlbum?.AlbumId;
+
+            await _service.CreateTrackAsync(
+                name: Name.Trim(),
+                milliseconds: milliseconds,
+                mediaTypeId: mediaTypeId,
+                albumId: albumId,
+                genreId: null,
+                composer: null);
+
+            return;
+        }
+
+        if (SelectedSelectorItem is not Track track)
+            throw new InvalidOperationException("Select a track.");
+
+     
+        await _service.UpdateTrackAsync(
+            trackId: track.TrackId,
+            name: Name.Trim(),
+            milliseconds: milliseconds,
+            mediaTypeId: track.MediaTypeId,
+            albumId: track.AlbumId,
+            genreId: track.GenreId,
+            composer: track.Composer);
+    }
 }

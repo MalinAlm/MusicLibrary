@@ -15,196 +15,80 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- TOP: selector + name + track fields -->
+        <!-- TOP: selector + name + (track length) -->
         <StackPanel Grid.Row="0" Width="420">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
 
-                <!-- Update/Delete -->
-                <StackPanel Grid.Row="0"
-                            Margin="0,0,0,10"
-                            Visibility="{Binding ShowSelector, Converter={StaticResource BoolToVisibilityConverter}}">
+            <!-- Selector (om man öppnar från menyn utan context) -->
+            <StackPanel Margin="0,0,0,10"
+                Visibility="{Binding ShowSelector, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock Text="{Binding SelectorLabel}" Margin="0,0,0,4"/>
 
-                    <TextBlock Text="{Binding SelectorLabel}" Margin="0,0,0,4"/>
+                <ListBox ItemsSource="{Binding SelectorItems}"
+                 SelectedItem="{Binding SelectedSelectorItem}"
+                 Height="180">
+                    <ListBox.Resources>
+                        <DataTemplate DataType="{x:Type model:Artist}">
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
 
-                    <!-- Sökfält för Track -->
-                    <StackPanel Orientation="Horizontal"
-                                Margin="0,0,0,6"
-                                Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBox Width="228"
-                                 Text="{Binding TrackSearchTextUserIsTyping, UpdateSourceTrigger=PropertyChanged}"
-                                 KeyDown="SearchBox_KeyDown"/>
-                        <Button Content="Sök"
-                                Margin="6,0,0,0"
-                                Command="{Binding SearchTracksCommand}"/>
-                        <Button Content="Rensa"
-                                Margin="6,0,0,0"
-                                Command="{Binding ClearSearchCommand}"/>
-                    </StackPanel>
+                        <DataTemplate DataType="{x:Type model:Album}">
+                            <TextBlock>
+                        <Run Text="{Binding Title}"/>
+                        <Run Text=" — "/>
+                        <Run Text="{Binding Artist.Name}"/>
+                            </TextBlock>
+                        </DataTemplate>
 
-                    <!-- Sökfält för Artist -->
-                    <StackPanel Orientation="Horizontal"
-                                Margin="0,0,0,6"
-                                Visibility="{Binding IsArtistSelectorVisible, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBox Width="228"
-                                 Text="{Binding ArtistSearchTextUserIsTyping, UpdateSourceTrigger=PropertyChanged}"
-                                 KeyDown="ArtistSearchBox_KeyDown"/>
-                        <Button Content="Sök"
-                                Margin="6,0,0,0"
-                                Command="{Binding SearchArtistsCommand}"/>
-                        <Button Content="Rensa"
-                                Margin="6,0,0,0"
-                                Command="{Binding ClearArtistSearchCommand}"/>
-                    </StackPanel>
+                        <DataTemplate DataType="{x:Type model:Track}">
+                            <TextBlock>
+                        <Run Text="{Binding Name}"/>
+                        <Run Text=" — "/>
+                        <Run Text="{Binding Album.Title}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.Resources>
+                </ListBox>
+            </StackPanel>
 
-                    <!-- Selector-lista för Track/Artist/Playlist -->
-                    <ListBox ItemsSource="{Binding SelectorItems}"
-                             SelectedItem="{Binding SelectedSelectorItem}"
-                             Height="180"
-                             ScrollViewer.ScrollChanged="SelectorList_ScrollChanged">
+            <!-- Name -->
+            <StackPanel Margin="0,0,0,10"
+                Visibility="{Binding ShowName, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock Text="{Binding NameLabel}" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
 
-                        <ListBox.Resources>
+            <!-- Artist selector (only when adding an album from menu, i.e. no context) -->
+            <StackPanel Margin="0,0,0,10"
+            Visibility="{Binding ShowArtistSelectorForAlbum, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock Text="Artist" Margin="0,0,0,4"/>
+                <ComboBox ItemsSource="{Binding Artists}"
+              SelectedItem="{Binding SelectedArtistForAlbum}"
+              DisplayMemberPath="Name"/>
+            </StackPanel>
 
-                            <DataTemplate DataType="{x:Type model:Artist}">
-                                <TextBlock Text="{Binding Name}"/>
-                            </DataTemplate>
-                            
-                            <DataTemplate DataType="{x:Type model:Album}">
-                                <TextBlock>
-                                    <Run Text="{Binding Title}"/>
-                                    <Run Text=" — "/>
-                                    <Run Text="{Binding Artist.Name}"/>
-                                </TextBlock>
-                            </DataTemplate>
-                            
-                            <DataTemplate DataType="{x:Type model:Playlist}">
-                                <TextBlock Text="{Binding Name}"/>
-                            </DataTemplate>
+            <!-- Album selector (only when adding a track from menu, i.e. no context) -->
+            <StackPanel Margin="0,0,0,10"
+            Visibility="{Binding ShowAlbumSelectorForTrack, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock Text="Album (optional)" Margin="0,0,0,4"/>
+                <ComboBox ItemsSource="{Binding Albums}"
+              SelectedItem="{Binding SelectedAlbum}"
+              DisplayMemberPath="Title"/>
+            </StackPanel>
 
-                            <DataTemplate DataType="{x:Type model:Track}">
-                                <TextBlock>
-                                    <Run Text="{Binding Name}"/>
-                                    <Run Text=" — "/>
-                                    <Run Text="{Binding Album.Title}"/>
-                                </TextBlock>
-                            </DataTemplate>
+            <!-- Track length only -->
+            <StackPanel Margin="0,0,0,10"
+                Visibility="{Binding ShowTrackLength, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock Text="Length min/sec (mm:ss)" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding MillisecondsText, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
 
-                        </ListBox.Resources>
-
-                    </ListBox>
-
-                </StackPanel>
-
-                <!-- Name (Playlist/Artist/Track) -->
-                <StackPanel Grid.Row="1"
-                            Margin="0,0,0,10"
-                            Visibility="{Binding ShowName, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <TextBlock Text="{Binding NameLabel}" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                <StackPanel Margin="0,0,0,10" Grid.Row="2"
-                            Visibility="{Binding IsAlbum, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <TextBlock Text="Artist" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding Artists}"
-                              SelectedItem="{Binding SelectedArtistForAlbum}"
-                              DisplayMemberPath="Name"/>
-                </StackPanel>
-
-                <StackPanel Margin="0,0,0,10" Grid.Row="2"
-                            Visibility="{Binding ShowAlbumOnAddArtist, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <TextBlock Text="Create album for this artist (optional)" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding NewAlbumTitle, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-
-                <!-- Track fields -->
-                <StackPanel Grid.Row="2"
-                            Visibility="{Binding IsTrack, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <StackPanel Margin="0,0,0,10">
-                        <TextBlock Text="Length min/sec (mm:ss)" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding MillisecondsText, UpdateSourceTrigger=PropertyChanged}"/>
-                    </StackPanel>
-
-                    <StackPanel Margin="0,0,0,10">
-                        <TextBlock Text="Album (optional)" Margin="0,0,0,4"/>
-
-                        <ComboBox ItemsSource="{Binding Albums}"
-                                  SelectedItem="{Binding SelectedAlbum}"
-                                  DisplayMemberPath="Title"/>
-                    </StackPanel>
-                </StackPanel>
-
-                <TextBlock Grid.Row="3"
-                           Text="{Binding ErrorText}"
-                           Foreground="DarkRed"
-                           TextWrapping="Wrap"
-                           Margin="0,4,0,0"/>
-            </Grid>
+            <TextBlock Text="{Binding ErrorText}"
+               Foreground="DarkRed"
+               TextWrapping="Wrap"
+               Margin="0,4,0,0"/>
         </StackPanel>
 
-        <!-- PLAYLIST UPDATE: manage tracks -->
-        <StackPanel Grid.Row="1"
-                    Margin="0,12,0,0"
-                    Visibility="{Binding IsUpdatePlaylist, Converter={StaticResource BoolToVisibilityConverter}}">
-
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Vänster: låtar i playlist -->
-                <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                    <TextBlock Text="Tracks in playlist" FontWeight="Bold" Margin="0,0,0,6"/>
-
-                    <ListBox ItemsSource="{Binding PlaylistTracks}"
-                             SelectedItem="{Binding SelectedPlaylistTrack}"
-                             DisplayMemberPath="Name"
-                             Height="180"/>
-
-                    <Button Content="Remove selected"
-                            Margin="0,8,0,0"
-                            Command="{Binding RemoveTrackCommand}"/>
-                </StackPanel>
-
-                <!-- Höger: bibliotek (Album -> Tracks) -->
-                <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                    <TextBlock Text="Search (album or track)" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding TrackSearchText, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="0,0,0,8"/>
-
-                    <TreeView ItemsSource="{Binding LibraryAlbumsView}"
-                              SelectedItemChanged="LibraryTree_SelectedItemChanged"
-                              Height="180">
-                        <TreeView.Resources>
-
-                            <!-- Album -->
-                            <HierarchicalDataTemplate DataType="{x:Type vm:AlbumNodeViewModel}"
-                                                      ItemsSource="{Binding Tracks}">
-                                <TextBlock Text="{Binding Title}"/>
-                            </HierarchicalDataTemplate>
-
-                            <!-- Track -->
-                            <DataTemplate DataType="{x:Type model:Track}">
-                                <TextBlock Text="{Binding Name}"/>
-                            </DataTemplate>
-
-                        </TreeView.Resources>
-                    </TreeView>
-
-                    <Button Content="Add selected"
-                            Margin="0,8,0,0"
-                            Command="{Binding AddTrackCommand}"/>
-                </StackPanel>
-            </Grid>
-        </StackPanel>
+        
 
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">

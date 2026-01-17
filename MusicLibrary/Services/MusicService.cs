@@ -423,6 +423,32 @@ namespace MusicLibrary.Services
             await tx.CommitAsync();
         }
 
+        public async Task<Artist?> GetArtistByIdAsync(int artistId)
+        {
+            using var db = new MusicContext();
+            return await db.Artists
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.ArtistId == artistId);
+        }
+
+        public async Task<Album?> GetAlbumByIdAsync(int albumId)
+        {
+            using var db = new MusicContext();
+            return await db.Albums
+                .AsNoTracking()
+                .Include(a => a.Artist)
+                .FirstOrDefaultAsync(a => a.AlbumId == albumId);
+        }
+
+        public async Task<Track?> GetTrackByIdAsync(int trackId)
+        {
+            using var db = new MusicContext();
+            return await db.Tracks
+                .AsNoTracking()
+                .Include(t => t.Album)
+                    .ThenInclude(a => a.Artist)
+                .FirstOrDefaultAsync(t => t.TrackId == trackId);
+        }
 
     }
 
