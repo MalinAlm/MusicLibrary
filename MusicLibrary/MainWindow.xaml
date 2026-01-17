@@ -80,10 +80,48 @@
                     Margin="5">
 
                 <DockPanel>
-                    <TextBlock Text="Playlists"
-                               FontWeight="Bold"
-                               Padding="5"
-                               DockPanel.Dock="Top"/>
+                    <Grid DockPanel.Dock="Top" Margin="5,5,5,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Playlists"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+
+                            <!-- Add playlist -->
+                            <Button Style="{StaticResource HeaderIconButton}"
+                                    Command="{Binding AddPlaylistDialogCommand}"
+                                    ToolTip="Add playlist">
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;"/>
+                            </Button>
+
+                            <!-- Rename playlist -->
+                            <Button Style="{StaticResource HeaderIconButton}"
+                                    Margin="4,0,0,0"
+                                    Command="{Binding UpdatePlaylistDialogCommand}"
+                                    ToolTip="Rename playlist">
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;"/>
+                            </Button>
+
+                            <!-- Delete playlist (NO dialog) -->
+                            <Button Style="{StaticResource HeaderIconButton}"
+                                    Margin="4,0,0,0"
+                                    Command="{Binding DeleteSelectedPlaylistCommand}"
+                                    ToolTip="Delete playlist">
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;"/>
+                            </Button>
+
+
+                        </StackPanel>
+                    </Grid>
+
 
                     <ListBox ItemsSource="{Binding Playlists}"
                              SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}"

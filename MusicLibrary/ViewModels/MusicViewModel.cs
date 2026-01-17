@@ -34,6 +34,8 @@ namespace MusicLibrary.ViewModels
         public RelayCommand DeleteTrackDialogCommand { get; }
         public RelayCommand AddTrackToPlaylistCommand { get; }
         public RelayCommand RemoveTrackFromPlaylistCommand { get; }
+        public RelayCommand DeleteSelectedPlaylistCommand { get; }
+
 
         //---- COLLECTIONS ----
         public ObservableCollection<Playlist> Playlists { get; } = new();
@@ -53,12 +55,17 @@ namespace MusicLibrary.ViewModels
             AddTrackDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Add, EntityType.Track));
 
             // Update
-            UpdatePlaylistDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Update, EntityType.Playlist));
+            UpdatePlaylistDialogCommand = new RelayCommand(
+                parameter => _openDialogAndRefresh(CrudMode.Update, EntityType.Playlist),
+                parameter => SelectedPlaylist != null
+            );
             UpdateArtistDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Update, EntityType.Artist));
             UpdateAlbumDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Update, EntityType.Album));
             UpdateTrackDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Update, EntityType.Track));
 
             // Delete
+            DeleteSelectedPlaylistCommand = new RelayCommand(async _ => await DeleteSelectedPlaylistAsync(),_ => SelectedPlaylist != null);
+
             DeletePlaylistDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Delete, EntityType.Playlist));
             DeleteArtistDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Delete, EntityType.Artist));
             DeleteAlbumDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Delete, EntityType.Album));
@@ -104,6 +111,9 @@ namespace MusicLibrary.ViewModels
             {
                 _selectedPlaylist = value;
                 OnPropertyChanged(nameof(SelectedPlaylist));
+
+                UpdatePlaylistDialogCommand?.RaiseCanExecuteChanged();
+                DeleteSelectedPlaylistCommand?.RaiseCanExecuteChanged();
 
                 if (_selectedPlaylist != null)
                 {
@@ -284,6 +294,25 @@ namespace MusicLibrary.ViewModels
             Tracks.Remove(SelectedPlaylistTrack);
             SelectedPlaylistTrack = null;
         }
+
+        private async Task DeleteSelectedPlaylistAsync()
+        {
+            if (SelectedPlaylist == null)
+                return;
+
+            var idToDelete = SelectedPlaylist.PlaylistId;
+
+            // Nollställ i UI
+            SelectedPlaylist = null;
+            Tracks.Clear();
+            SelectedPlaylistTrack = null;
+
+            // Tar bort playlist + alla kopplingar oavsett innehåll
+            await _service.DeletePlaylistAsync(idToDelete);
+
+            await LoadDataAsync();
+        }
+
 
     }
 }
