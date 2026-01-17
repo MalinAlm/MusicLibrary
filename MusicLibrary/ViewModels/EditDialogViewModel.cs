@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
-using System.Windows.Data;
+
 
 
 namespace MusicLibrary.ViewModels;
@@ -344,7 +344,7 @@ public class EditDialogViewModel : BaseViewModel
         Entity = entity;
         _owner = owner;
         _context = context;
-        _forceHideSelector = mode == CrudMode.Update && context != null; //kolla om den ligger rätt
+        _forceHideSelector = mode == CrudMode.Update && context != null; 
 
         ConfirmCommand = new RelayCommand(parameter => ConfirmAsync(), _ => !IsBusy);
         SearchTracksCommand = new RelayCommand(parameter => ApplySearchAndReloadAsync());
@@ -371,24 +371,31 @@ public class EditDialogViewModel : BaseViewModel
     {
         ErrorText = "";
 
-        // Förval när dialogen öppnas från TreeView/context-menu
         if (_context != null)
         {
-            // Add Album under Artist
+         
+            if (Mode == CrudMode.Update && Entity == EntityType.Playlist && _context is Playlist contextPlaylistToEdit)
+            {
+                SelectedSelectorItem = contextPlaylistToEdit;
+                Name = contextPlaylistToEdit.Name ?? "";
+                return;
+            }
+
+           
             if (Mode == CrudMode.Add && Entity == EntityType.Album && _context is Artist contextArtist)
             {
                 SelectedArtistForAlbum = contextArtist;
-                return; // vi behöver inte ladda selector
+                return; 
             }
 
-            // Add Track under Album
+           
             if (Mode == CrudMode.Add && Entity == EntityType.Track && _context is Album contextAlbum)
             {
                 SelectedAlbum = contextAlbum;
                 return;
             }
 
-            // Update från TreeView (förval exakt item)
+           
             if (Mode == CrudMode.Update && Entity == EntityType.Artist && _context is Artist contextArtistToEdit)
             {
                 SelectedSelectorItem = contextArtistToEdit;
@@ -524,7 +531,9 @@ public class EditDialogViewModel : BaseViewModel
         {
             ErrorText = "";
 
-            if (Entity == EntityType.Artist)
+            if (Entity == EntityType.Playlist)
+                await AddOrUpdatePlaylistAsync();
+            else if (Entity == EntityType.Artist)
                 await AddOrUpdateArtistAsync();
             else if (Entity == EntityType.Album)
                 await AddOrUpdateAlbumAsync();
@@ -544,205 +553,6 @@ public class EditDialogViewModel : BaseViewModel
         {
             IsBusy = false;
         }
-    }
-
-
-    // ---- Playlist CRUD ----
-    private async Task DoPlaylistAsync()
-    {
-        if (Mode == CrudMode.Add)
-        {
-            if (string.IsNullOrWhiteSpace(Name))
-                throw new InvalidOperationException("Name is required.");
-
-            await _service.CreatePlaylistAsync(Name);
-        }
-        else if (Mode == CrudMode.Update)
-        {
-            if (SelectedSelectorItem is not Playlist p)
-                throw new InvalidOperationException("Select a playlist.");
-
-            if (string.IsNullOrWhiteSpace(Name))
-                throw new InvalidOperationException("Name is required.");
-
-            await _service.UpdatePlaylistNameAsync(p.PlaylistId, Name);
-        }
-        else 
-        {
-            if (SelectedSelectorItem is not Playlist p)
-                throw new InvalidOperationException("Select a playlist.");
-
-            await _service.DeletePlaylistAsync(p.PlaylistId);
-        }
-    }
-
-    // ---- Artist CRUD ----
-    private async Task DoArtistAsync()
-    {
-        if (Mode == CrudMode.Add)
-        {
-            if (string.IsNullOrWhiteSpace(Name))
-                throw new InvalidOperationException("Name is required.");
-
-            var createdArtist = await _service.CreateArtistAsync(Name.Trim());
-
-            if (!string.IsNullOrWhiteSpace(NewAlbumTitle))
-                await _service.CreateAlbumAsync(NewAlbumTitle.Trim(), createdArtist.ArtistId);
-
-            return;
-        }
-        else if (Mode == CrudMode.Update)
-        {
-            if (SelectedSelectorItem is not Artist a)
-                throw new InvalidOperationException("Select an artist.");
-
-            if (string.IsNullOrWhiteSpace(Name))
-                throw new InvalidOperationException("Name is required.");
-
-            await _service.UpdateArtistAsync(a.ArtistId, Name);
-        }
-        else 
-        {
-            if (SelectedSelectorItem is not Artist a)
-                throw new InvalidOperationException("Select an artist.");
-
-            await _service.DeleteArtistAsync(a.ArtistId);
-        }
-    }
-
-    // ---- Album CRUD ----
-
-    private async Task DoAlbumAsync()
-    {
-        if (Mode == CrudMode.Delete)
-        {
-            if (SelectedSelectorItem is not Album al)
-                throw new InvalidOperationException("Select an album.");
-
-            await _service.DeleteAlbumAsync(al.AlbumId);
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(Name))
-            throw new InvalidOperationException("Album title is required.");
-
-        if (SelectedArtistForAlbum == null)
-            throw new InvalidOperationException("Select an artist.");
-
-        if (Mode == CrudMode.Add)
-            await _service.CreateAlbumAsync(Name.Trim(), SelectedArtistForAlbum.ArtistId);
-        else
-        {
-            if (SelectedSelectorItem is not Album al)
-                throw new InvalidOperationException("Select an album.");
-
-            await _service.UpdateAlbumAsync(al.AlbumId, Name.Trim(), SelectedArtistForAlbum.ArtistId);
-        }
-    }
-
-    // ---- Track CRUD ----
-    private async Task DoTrackAsync()
-    {
-        if (Mode == CrudMode.Delete)
-        {
-            if (SelectedSelectorItem is not Track track)
-                throw new InvalidOperationException("Select a track.");
-
-            await _service.DeleteTrackAsync(track.TrackId);
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(Name))
-            throw new InvalidOperationException("Track name is required.");
-
-        if (!TryParseMmSsToMs(MillisecondsText, out var ms))
-            throw new InvalidOperationException("Length must be in format mm:ss (e.g. 3:45).");
-
-        var albumId = SelectedAlbum?.AlbumId;
-        var genreId = (int?)null;
-
-        if (Mode == CrudMode.Add)
-        {
-            if (_defaultMediaTypeId == null)
-                throw new InvalidOperationException("No MediaType available in DB (cannot add track).");
-
-            await _service.CreateTrackAsync(
-                Name,
-                ms,
-                _defaultMediaTypeId.Value,
-                albumId,
-                genreId,
-                composer: null
-            );
-        }
-        else 
-        {
-            if (SelectedSelectorItem is not Track track)
-                throw new InvalidOperationException("Select a track.");
-
-            await _service.UpdateTrackAsync(
-                track.TrackId,
-                Name,
-                ms,
-                track.MediaTypeId,
-                albumId,
-                genreId,
-                composer: null
-            );
-        }
-    }
-
-
-
-
-    // ---- Bibliotek: ladda album->tracks + filter (album + track) ----
-    private async Task LoadLibraryAlbumsOnceAsync()
-    {
-        if (LibraryAlbums.Count > 0) return;
-
-        var tracks = await _service.GetTracksAsync(); 
-
-        LibraryAlbums.Clear();
-
-        foreach (var g in tracks.GroupBy(t => t.AlbumId))
-        {
-            var first = g.FirstOrDefault();
-
-            var node = new AlbumNodeViewModel
-            {
-                AlbumId = first?.AlbumId ?? -1,
-                Title = first?.Album?.Title ?? "(No album)"
-            };
-
-            foreach (var t in g.OrderBy(x => x.Name))
-                node.Tracks.Add(t);
-
-            LibraryAlbums.Add(node);
-        }
-
-        // Sortera album
-        var sorted = LibraryAlbums.OrderBy(a => a.Title).ToList();
-        LibraryAlbums.Clear();
-        foreach (var a in sorted) LibraryAlbums.Add(a);
-
-        LibraryAlbumsView = CollectionViewSource.GetDefaultView(LibraryAlbums);
-        LibraryAlbumsView.Filter = obj =>
-        {
-            if (obj is not AlbumNodeViewModel a) return false;
-            if (string.IsNullOrWhiteSpace(TrackSearchText)) return true;
-
-            var q = TrackSearchText.Trim();
-
-            // albumtitel
-            if (a.Title.Contains(q, StringComparison.OrdinalIgnoreCase))
-                return true;
-
-            // låttitel
-            return a.Tracks.Any(t =>
-                t.Name?.Contains(q, StringComparison.OrdinalIgnoreCase) == true);
-        };
-
-        RaisePropertyChanged(nameof(LibraryAlbumsView));
     }
 
     private async Task ReloadPlaylistTracksAsync()
@@ -943,6 +753,23 @@ public class EditDialogViewModel : BaseViewModel
 
       
         await _service.UpdateAlbumAsync(album.AlbumId, Name.Trim(), album.ArtistId);
+    }
+
+    private async Task AddOrUpdatePlaylistAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Name))
+            throw new InvalidOperationException("Playlist name is required.");
+
+        if (Mode == CrudMode.Add)
+        {
+            await _service.CreatePlaylistAsync(Name.Trim());
+            return;
+        }
+
+        if (SelectedSelectorItem is not Playlist playlist)
+            throw new InvalidOperationException("Select a playlist.");
+
+        await _service.UpdatePlaylistNameAsync(playlist.PlaylistId, Name.Trim());
     }
 
     private async Task AddOrUpdateTrackAsync()

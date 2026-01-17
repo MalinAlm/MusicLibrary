@@ -7,65 +7,13 @@
         mc:Ignorable="d"
         Title="PALT FACTORY" Height="500" Width="1000">
 
-    <Window.InputBindings>
-        <!-- Add -->
-        <KeyBinding Key="P" Modifiers="Ctrl" Command="{Binding AddPlaylistDialogCommand}" />
-        <KeyBinding Key="A" Modifiers="Ctrl" Command="{Binding AddArtistDialogCommand}" />
-        <KeyBinding Key="L" Modifiers="Ctrl" Command="{Binding AddAlbumDialogCommand}" />
-        <KeyBinding Key="T" Modifiers="Ctrl" Command="{Binding AddTrackDialogCommand}" />
-
-        <!-- Update -->
-        <KeyBinding Key="P" Modifiers="Shift" Command="{Binding UpdatePlaylistDialogCommand}" />
-        <KeyBinding Key="A" Modifiers="Shift" Command="{Binding UpdateArtistDialogCommand}" />
-        <KeyBinding Key="L" Modifiers="Shift" Command="{Binding UpdateAlbumDialogCommand}" />
-        <KeyBinding Key="T" Modifiers="Shift" Command="{Binding UpdateTrackDialogCommand}" />
-
-        <!-- Delete -->
-        <KeyBinding Key="P" Modifiers="Alt" Command="{Binding DeletePlaylistDialogCommand}" />
-        <KeyBinding Key="A" Modifiers="Alt" Command="{Binding DeleteArtistDialogCommand}" />
-        <KeyBinding Key="L" Modifiers="Alt" Command="{Binding DeleteAlbumDialogCommand}" />
-        <KeyBinding Key="T" Modifiers="Alt" Command="{Binding DeleteTrackDialogCommand}" />
-    </Window.InputBindings>
-
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <!-- Menu -->
             <RowDefinition Height="*"/>
-            <!-- Content -->
         </Grid.RowDefinitions>
 
-        <!-- MENU -->
-        <Menu Grid.Row="0">
-            <MenuItem Header="Edit">
-
-                <MenuItem Header="Add">
-                    <MenuItem Header="Playlist" Click="AddPlaylist_Click" InputGestureText="Ctrl+P"/>
-                    <MenuItem Header="Artist" Click="AddArtist_Click" InputGestureText="Ctrl+A"/>
-                    <MenuItem Header="Album" Click="AddAlbum_Click" InputGestureText="Ctrl+L"/>
-                    <MenuItem Header="Track" Click="AddTrack_Click" InputGestureText="Ctrl+T"/>
-                </MenuItem>
-
-                <MenuItem Header="Update">
-                    <MenuItem Header="Playlist" Click="UpdatePlaylist_Click" InputGestureText="Shift+P"/>
-                    <MenuItem Header="Artist" Click="UpdateArtist_Click" InputGestureText="Shift+A"/>
-                    <MenuItem Header="Album" Click="UpdateAlbum_Click" InputGestureText="Shift+L"/>
-                    <MenuItem Header="Track" Click="UpdateTrack_Click" InputGestureText="Shift+T"/>
-                </MenuItem>
-
-                <MenuItem Header="Delete">
-                    <MenuItem Header="Playlist" Click="DeletePlaylist_Click" InputGestureText="Alt+P"/>
-                    <MenuItem Header="Artist" Click="DeleteArtist_Click" InputGestureText="Alt+A"/>
-                    <MenuItem Header="Album" Click="DeleteAlbum_Click" InputGestureText="Alt+L"/>
-                    <MenuItem Header="Track" Click="DeleteTrack_Click" InputGestureText="Alt+T"/>
-                </MenuItem>
-
-            </MenuItem>
-        </Menu>
-
-        <!-- CONTENT -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="400" />
@@ -95,7 +43,6 @@
                                     Orientation="Horizontal"
                                     VerticalAlignment="Center">
 
-                            <!-- Add playlist -->
                             <Button Style="{StaticResource HeaderIconButton}"
                                     Command="{Binding AddPlaylistDialogCommand}"
                                     ToolTip="Add playlist">
@@ -114,11 +61,9 @@
 
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
-                                <!-- Gör så högerklick väljer raden -->
                                 <EventSetter Event="PreviewMouseRightButtonDown"
                                              Handler="PlaylistItem_PreviewMouseRightButtonDown"/>
 
-                                <!-- Spara ViewModel på Tag så ContextMenu kan nå kommandon -->
                                 <Setter Property="Tag"
                                         Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
 
@@ -128,7 +73,8 @@
                                         <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
 
                                             <MenuItem Header="Edit"
-                                                      Command="{Binding UpdatePlaylistDialogCommand}">
+                                                      Command="{Binding UpdatePlaylistDialogCommand}"
+                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                                                 <MenuItem.Icon>
                                                     <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;"/>
                                                 </MenuItem.Icon>

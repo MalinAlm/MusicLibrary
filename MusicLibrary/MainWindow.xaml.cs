@@ -1,6 +1,5 @@
 ﻿using MusicLibrary.ViewModels;
 using MusicLibrary.Views;
-using MusicLibrary.Services;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -182,7 +181,6 @@ public partial class MainWindow : Window
         var filtered = BuildFilteredArtistTree(_allArtistsTree, query);
         myTreeView.ItemsSource = new ObservableCollection<Artist>(filtered);
 
-        // Expandera så matchande album/tracks syns direkt
         Dispatcher.BeginInvoke(new Action(() => ExpandAllArtistsAndAlbums(myTreeView)));
     }
 
@@ -200,7 +198,6 @@ public partial class MainWindow : Window
 
             if (artistMatches)
             {
-                // Artist-match -> visa hela artistens träd
                 results.Add(CloneArtistWithAllChildren(artist));
                 continue;
             }
@@ -240,7 +237,6 @@ public partial class MainWindow : Window
                     Albums = matchedAlbums
                 };
 
-                // sätt back-references för trygg navigation i UI/dialoger
                 foreach (var albumClone in artistClone.Albums)
                     albumClone.Artist = artistClone;
 
@@ -377,61 +373,5 @@ public partial class MainWindow : Window
         if (result == true)
             await RefreshAllAsync();
     }
-
-    public static class EditCommands
-    {
-        public static readonly RoutedUICommand AddPlaylist = new("Add Playlist", "AddPlaylist", typeof(EditCommands));
-        public static readonly RoutedUICommand AddArtist = new("Add Artist", "AddArtist", typeof(EditCommands));
-        public static readonly RoutedUICommand AddAlbum = new("Add Album", "AddAlbum", typeof(EditCommands));
-        public static readonly RoutedUICommand AddTrack = new("Add Track", "AddTrack", typeof(EditCommands));
-    }
-
-    private async void AddPlaylist_Executed(object sender, ExecutedRoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Playlist, null);
-
-    private async void AddArtist_Executed(object sender, ExecutedRoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Artist, null);
-
-    private async void AddAlbum_Executed(object sender, ExecutedRoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Album, null);
-
-    private async void AddTrack_Executed(object sender, ExecutedRoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Track, null);
-
-
-    private async void AddPlaylist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Playlist, null);
-
-    private async void UpdatePlaylist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Playlist, null);
-
-    private async void DeletePlaylist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Playlist, null);
-
-    private async void AddArtist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Artist, null);
-
-    private async void UpdateArtist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Artist, null);
-
-    private async void DeleteArtist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Artist, null);
-
-    private async void AddTrack_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Track, null);
-
-    private async void UpdateTrack_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Track, null);
-
-    private async void DeleteTrack_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Track, null);
-    private async void AddAlbum_Click(object sender, RoutedEventArgs e)
-    => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Album, null);
-
-    private async void UpdateAlbum_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Album, null);
-
-    private async void DeleteAlbum_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Album, null);
 
 }

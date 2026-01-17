@@ -69,8 +69,12 @@ namespace MusicLibrary.ViewModels
 
             // Update
             UpdatePlaylistDialogCommand = new RelayCommand(
-                parameter => _openDialogAndRefresh(CrudMode.Update, EntityType.Playlist, null),
-                parameter => SelectedPlaylist != null
+                parameter =>
+                {
+                    var playlistToEdit = parameter as Playlist ?? SelectedPlaylist;
+                    return _openDialogAndRefresh(CrudMode.Update, EntityType.Playlist, playlistToEdit);
+                },
+                parameter => (parameter is Playlist) || SelectedPlaylist != null
             );
             UpdateArtistDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Update, EntityType.Artist, null));
             UpdateAlbumDialogCommand = new RelayCommand(parameter => _openDialogAndRefresh(CrudMode.Update, EntityType.Album, null));
@@ -377,12 +381,10 @@ namespace MusicLibrary.ViewModels
 
             var idToDelete = SelectedPlaylist.PlaylistId;
 
-            // Nollställ i UI
             SelectedPlaylist = null;
             Tracks.Clear();
             SelectedPlaylistTrack = null;
 
-            // Tar bort playlist + alla kopplingar oavsett innehåll
             await _service.DeletePlaylistAsync(idToDelete);
 
             await LoadDataAsync();
