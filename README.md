@@ -44,29 +44,17 @@ In the **Start/Home view**, the application is divided into multiple sections:
 - On the **left side**, you can select a playlist.
 - The **right view** shows the tracks in the selected playlist.
 - You can delete tracks from a playlist by clicking on the 🗑 bin icon.
-- In the **middle column**, you can browse **Artists**, **Albums**, and **Tracks**.
+- You can also add/update/delete a playlist from the left view.
+- In the **middle column**, you can search and browse **Artists**, **Albums**, and **Tracks**. Add/update/delete available by right click.
 - By double-clicking a track, it will be added to the selected playlist.
-
----
-
-### ✏️ Edit Menu
-
-In the **Edit menu**, you can:
-
-- Add / Update / Delete **Playlists**
-- Add / Update / Delete **Artists**
-- Add / Update / Delete **Albums**
-- Add / Update / Delete **Tracks**
-
-All changes are saved directly in the application.
 
 ---
 
 ## ✅ Summary
 
 - Manage playlists and music content
-- Add tracks to playlists using double-click
-- Edit all entities through the Edit menu
+- Add tracks to playlists using double-click or context menu
+- Edit all entities through main window
 
 ---
 
