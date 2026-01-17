@@ -73,6 +73,16 @@ public partial class MainWindow : Window
         }
     }
 
+    private void TreeViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is TreeViewItem item)
+        {
+            item.IsSelected = true;
+            item.Focus();
+            e.Handled = false;
+        }
+    }
+
     private async void DataGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         if (e.VerticalOffset + e.ViewportHeight >= e.ExtentHeight - 20)
@@ -117,9 +127,9 @@ public partial class MainWindow : Window
 
 
     //Meny
-    private async Task OpenDialogAndRefreshAsync(CrudMode mode, EntityType entity)
+    private async Task OpenDialogAndRefreshAsync(CrudMode mode, EntityType entity, object? context)
     {
-        var dlg = new EditDialog(mode, entity) { Owner = this };
+        var dlg = new EditDialog(mode, entity, context) { Owner = this };
         var result = dlg.ShowDialog();
 
         if (result == true)
@@ -135,51 +145,51 @@ public partial class MainWindow : Window
     }
 
     private async void AddPlaylist_Executed(object sender, ExecutedRoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Playlist);
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Playlist, null);
 
     private async void AddArtist_Executed(object sender, ExecutedRoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Artist);
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Artist, null);
 
     private async void AddAlbum_Executed(object sender, ExecutedRoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Album);
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Album, null);
 
     private async void AddTrack_Executed(object sender, ExecutedRoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Track);
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Track, null);
 
 
     private async void AddPlaylist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Playlist);
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Playlist, null);
 
     private async void UpdatePlaylist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Playlist);
+        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Playlist, null);
 
     private async void DeletePlaylist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Playlist);
+        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Playlist, null);
 
     private async void AddArtist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Artist);
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Artist, null);
 
     private async void UpdateArtist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Artist);
+        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Artist, null);
 
     private async void DeleteArtist_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Artist);
+        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Artist, null);
 
     private async void AddTrack_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Track);
+        => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Track, null);
 
     private async void UpdateTrack_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Track);
+        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Track, null);
 
     private async void DeleteTrack_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Track);
+        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Track, null);
     private async void AddAlbum_Click(object sender, RoutedEventArgs e)
-    => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Album);
+    => await OpenDialogAndRefreshAsync(CrudMode.Add, EntityType.Album, null);
 
     private async void UpdateAlbum_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Album);
+        => await OpenDialogAndRefreshAsync(CrudMode.Update, EntityType.Album, null);
 
     private async void DeleteAlbum_Click(object sender, RoutedEventArgs e)
-        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Album);
+        => await OpenDialogAndRefreshAsync(CrudMode.Delete, EntityType.Album, null);
 
 }

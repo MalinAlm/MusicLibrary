@@ -150,44 +150,187 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                <TextBlock  Text="Artists"
-                                            FontWeight="Bold"
-                                            Padding="5"
-                                            DockPanel.Dock="Top"/>
-                                <TextBlock Grid.Column="1"
-                                           Text="ⓘ"
-                                           FontSize="20"
-                                           Margin="220,0,0,0"
-                                           VerticalAlignment="Center"
-                                           Cursor="Arrow"
-                                           Focusable="True"
-                                           ToolTipService.ShowDuration="60000"
-                                           AutomationProperties.Name="Information"
-                                           AutomationProperties.HelpText="Select an artist and an album, then double click a track to add to playlist">
-                                    <TextBlock.ToolTip>
-                                        <ToolTip Placement="Mouse">
-                                            <TextBlock Text="Select an artist and an album, then double click a track to add to playlist"/>
-                                        </ToolTip>
-                                    </TextBlock.ToolTip>
-                             </TextBlock>
+                            
+
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0"
+                                               Text="Artists"
+                                               FontWeight="Bold"
+                                               Padding="5"
+                                               VerticalAlignment="Center"/>
+
+                                    <!-- Add artist  -->
+                                    <Button Grid.Column="2"
+                                            Style="{StaticResource HeaderIconButton}"
+                                            Margin="180,0,6,0"
+                                            Command="{Binding AddArtistDialogCommand}"
+                                            ToolTip="Add artist">
+                                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;"/>
+                                    </Button>
+
+                                    <!-- Info icon -->
+                                    <TextBlock Grid.Column="3"
+                                               Text="ⓘ"
+                                               FontSize="20"
+                                               Margin="0,0,5,0"
+                                               VerticalAlignment="Center"
+                                               Cursor="Arrow"
+                                               Focusable="True"
+                                               ToolTipService.ShowDuration="60000"
+                                               AutomationProperties.Name="Information"
+                                               AutomationProperties.HelpText="Select an artist and an album, then double click a track to add to playlist">
+                                        <TextBlock.ToolTip>
+                                            <ToolTip Placement="Mouse">
+                                                <TextBlock Text="Select an artist and an album, then double click a track to add to playlist"/>
+                                            </ToolTip>
+                                        </TextBlock.ToolTip>
+                                    </TextBlock>
+                                </Grid>
+
 
                             </StackPanel>
                             <TreeView x:Name="myTreeView"
-                                      SelectedItemChanged="TreeView_SelectedItemChanged" Margin="5" Grid.Row="1" MouseDoubleClick="TreeView_MouseDoubleClick">
+                                      Tag="{Binding}"
+                                      SelectedItemChanged="TreeView_SelectedItemChanged"
+                                      Margin="5" Grid.Row="1" 
+                                      MouseDoubleClick="TreeView_MouseDoubleClick">
+                              
+                                <TreeView.ItemContainerStyle>
+                                    <Style TargetType="TreeViewItem">
+                                        <EventSetter Event="PreviewMouseRightButtonDown"
+                                                     Handler="TreeViewItem_PreviewMouseRightButtonDown"/>
+                                    </Style>
+                                </TreeView.ItemContainerStyle>
+
+
                                 <TreeView.Resources>
+
                                     <HierarchicalDataTemplate DataType="{x:Type model:Artist}" ItemsSource="{Binding Albums}">
-                                        <TextBlock>
-                                         <Run Text="{Binding Name}" />
-                                         <Run Text=" (" /><Run Text="{Binding Albums.Count, Mode=OneWay}" />
-                                         <Run Text=" albums)" />
+                                        <TextBlock Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type TreeView}}}">
+
+                                            <TextBlock.ContextMenu>
+                                                <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                                    <MenuItem Header="Add album"
+                                                              Command="{Binding AddAlbumUnderArtistCommand}"
+                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+>
+                                                        <MenuItem.Icon>
+                                                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <Separator/>
+                                                    <MenuItem Header="Edit artist"
+                                                              Command="{Binding EditArtistFromNodeCommand}"
+                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+>
+                                                        <MenuItem.Icon>
+                                                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="Delete artist"
+                                                              Command="{Binding DeleteArtistFromNodeCommand}"
+                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+>
+                                                        <MenuItem.Icon>
+                                                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                </ContextMenu>
+                                            </TextBlock.ContextMenu>
+
+
+                                            <Run Text="{Binding Name}" />
+                                            <Run Text=" (" />
+                                            <Run Text="{Binding Albums.Count, Mode=OneWay}" />
+                                            <Run Text=" albums)" />
                                         </TextBlock>
                                     </HierarchicalDataTemplate>
+
                                     <HierarchicalDataTemplate DataType="{x:Type model:Album}" ItemsSource="{Binding Tracks}">
-                                        <TextBlock Text="{Binding Title}" />
+                                        <TextBlock Text="{Binding Title}" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type TreeView}}}">
+
+                                            <TextBlock.ContextMenu>
+                                                <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                                    <MenuItem Header="Add track"
+                                                              Command="{Binding AddTrackUnderAlbumCommand}"
+                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+>
+                                                        <MenuItem.Icon>
+                                                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+
+                                                    <Separator/>
+
+                                                    <MenuItem Header="Edit album"
+                                                              Command="{Binding EditAlbumFromNodeCommand}"
+                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+>
+                                                        <MenuItem.Icon>
+                                                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+
+                                                    <MenuItem Header="Delete album"
+                                                              Command="{Binding DeleteAlbumFromNodeCommand}"
+                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+>
+                                                        <MenuItem.Icon>
+                                                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                </ContextMenu>
+
+                                            </TextBlock.ContextMenu>
+                                         </TextBlock>
                                     </HierarchicalDataTemplate>
+
                                     <HierarchicalDataTemplate DataType="{x:Type model:Track}">
-                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock Text="{Binding Name}" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type TreeView}}}">
+
+                                            <TextBlock.ContextMenu>
+                                                <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                                    <MenuItem Header="Add track to selected playlist"
+                                                              Command="{Binding AddTrackToSelectedPlaylistFromNodeCommand}"
+                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+>
+                                                        <MenuItem.Icon>
+                                                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+
+                                                    <Separator/>
+
+                                                    <MenuItem Header="Edit track"
+                                                              Command="{Binding EditTrackFromNodeCommand}"
+                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+>
+                                                        <MenuItem.Icon>
+                                                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+
+                                                    <MenuItem Header="Delete track"
+                                                              Command="{Binding DeleteTrackFromNodeCommand}"
+                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+>
+                                                        <MenuItem.Icon>
+                                                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                </ContextMenu>
+
+                                            </TextBlock.ContextMenu>
+                                    </TextBlock>
                                     </HierarchicalDataTemplate>
+
                                 </TreeView.Resources>
                             </TreeView>
 

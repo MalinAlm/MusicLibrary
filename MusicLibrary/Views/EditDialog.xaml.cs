@@ -8,23 +8,24 @@ namespace MusicLibrary.Views;
 
 public partial class EditDialog : Window
 {
-    public EditDialog(CrudMode mode, EntityType entity)
+    public EditDialog(CrudMode mode, EntityType entity, object? context = null)
     {
         InitializeComponent();
-        DataContext = new EditDialogViewModel(mode, entity, this);
+        DataContext = new EditDialogViewModel(mode, entity, this, context);
     }
 
     private void LibraryTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         if (DataContext is EditDialogViewModel vm)
         {
-            // Om man klickar på en Track så sätt den som vald (för Add selected)
+           
             vm.SelectedLibraryTrack = e.NewValue as Track;
         }
     }
 
     private double _previousScrollExtentHeight = 0;
     private double _previousVerticalOffset = 0;
+
 
     private async void SelectorList_ScrollChanged(object sender, ScrollChangedEventArgs e)
     {

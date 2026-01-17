@@ -15,6 +15,7 @@ public class EditDialogViewModel : BaseViewModel
     private readonly MusicService _service = new();
     private int? _defaultMediaTypeId;
     private readonly Window _owner;
+    private readonly object? _context;
 
     public CrudMode Mode { get; }
     public EntityType Entity { get; }
@@ -333,11 +334,12 @@ public class EditDialogViewModel : BaseViewModel
         }
     }
 
-    public EditDialogViewModel(CrudMode mode, EntityType entity, Window owner)
+    public EditDialogViewModel(CrudMode mode, EntityType entity, Window owner, object? context = null)
     {
         Mode = mode;
         Entity = entity;
         _owner = owner;
+        _context = context;
 
         ConfirmCommand = new RelayCommand(parameter => ConfirmAsync(), _ => !IsBusy);
         SearchTracksCommand = new RelayCommand(parameter => ApplySearchAndReloadAsync());
@@ -384,7 +386,29 @@ public class EditDialogViewModel : BaseViewModel
                 SelectorItems = TracksAvailableToSelect;
                 await ResetSelectorAndLoadFirstPageAsync();
             }
+
         }
+
+        // ----- PRESELECT (UPDATE/DELETE) -----
+        if (Mode != CrudMode.Add && _context != null)
+        {
+            if (Entity == EntityType.Album && _context is Album ctxAl)
+            {
+                
+                if (SelectorItems is IList list)
+                    SelectedSelectorItem = list.Cast<object>()
+                                               .OfType<Album>()
+                                               .FirstOrDefault(a => a.AlbumId == ctxAl.AlbumId);
+            }
+
+           
+            if (Entity == EntityType.Artist && _context is Artist ctxA)
+                SelectedSelectorItem = ArtistsAvailableToSelect.FirstOrDefault(a => a.ArtistId == ctxA.ArtistId);
+
+            if (Entity == EntityType.Track && _context is Track ctxT)
+                SelectedSelectorItem = TracksAvailableToSelect.FirstOrDefault(t => t.TrackId == ctxT.TrackId);
+        }
+
 
         if (Entity == EntityType.Album || (Entity == EntityType.Artist && Mode == CrudMode.Add))
         {
@@ -405,6 +429,18 @@ public class EditDialogViewModel : BaseViewModel
 
             if (MediaTypes.Count == 0)
                 ErrorText = "No MediaTypes found in database.";
+        }
+
+        
+        if (Mode == CrudMode.Add && Entity == EntityType.Album && _context is Artist ctxArtist)
+        {
+            SelectedArtistForAlbum = Artists.FirstOrDefault(a => a.ArtistId == ctxArtist.ArtistId);
+        }
+
+      
+        if (Mode == CrudMode.Add && Entity == EntityType.Track && _context is Album ctxAlbum)
+        {
+            SelectedAlbum = Albums.FirstOrDefault(a => a.AlbumId == ctxAlbum.AlbumId);
         }
 
         var mediaTypes = await _service.GetMediaTypesAsync();
