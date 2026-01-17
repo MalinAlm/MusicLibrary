@@ -87,7 +87,8 @@ public partial class MainWindow : Window
     private void InfoButton_Click(object sender, RoutedEventArgs e)
     {
         const string message =
-            "Click the plus icon to add artist \n\n" +
+            "Click the plus icon next to playlist header to add playlist \n\n" +
+            "Click the plus icon next to artist header to add artist \n\n" +
             "Search artist/album/track. Press Enter or click Search.\n\n" +
             "Right click artist/album/track to access context menu for editing.";
 
