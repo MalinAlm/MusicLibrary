@@ -190,11 +190,11 @@ public class EditDialogViewModel : BaseViewModel
 
     public string NameLabel => Entity switch
     {
-        EntityType.Playlist => "Edit playlist name",
-        EntityType.Artist => "Edit artist name",
-        EntityType.Album => "Edit album title",
-        EntityType.Track => "Edit track name",
-        _ => "Edit name"
+        EntityType.Playlist => "Playlist name",
+        EntityType.Artist => "Artist name",
+        EntityType.Album => "Album title",
+        EntityType.Track => "Track name",
+        _ => "Name"
     };
 
     private string _name = "";
