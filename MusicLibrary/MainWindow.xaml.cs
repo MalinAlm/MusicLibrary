@@ -332,6 +332,16 @@ public partial class MainWindow : Window
         }
     }
 
+    private void PlaylistItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is ListBoxItem item)
+        {
+            item.IsSelected = true;
+            item.Focus();
+            e.Handled = false;
+        }
+    }
+
     //Meny
     private async Task OpenDialogAndRefreshAsync(CrudMode mode, EntityType entity, object? context)
     {

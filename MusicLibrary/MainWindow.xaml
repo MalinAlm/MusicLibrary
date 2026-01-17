@@ -102,22 +102,6 @@
                                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;"/>
                             </Button>
 
-                            <!-- Rename playlist -->
-                            <Button Style="{StaticResource HeaderIconButton}"
-                                    Margin="4,0,0,0"
-                                    Command="{Binding UpdatePlaylistDialogCommand}"
-                                    ToolTip="Rename playlist">
-                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;"/>
-                            </Button>
-
-                            <!-- Delete playlist (NO dialog) -->
-                            <Button Style="{StaticResource HeaderIconButton}"
-                                    Margin="4,0,0,0"
-                                    Command="{Binding DeleteSelectedPlaylistCommand}"
-                                    ToolTip="Delete playlist">
-                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;"/>
-                            </Button>
-
 
                         </StackPanel>
                     </Grid>
@@ -126,7 +110,44 @@
                     <ListBox ItemsSource="{Binding Playlists}"
                              SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}"
                              DisplayMemberPath="Name"
-                             Margin="5"/>
+                             Margin="5">
+
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <!-- Gör så högerklick väljer raden -->
+                                <EventSetter Event="PreviewMouseRightButtonDown"
+                                             Handler="PlaylistItem_PreviewMouseRightButtonDown"/>
+
+                                <!-- Spara ViewModel på Tag så ContextMenu kan nå kommandon -->
+                                <Setter Property="Tag"
+                                        Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <!-- DataContext = ViewModel -->
+                                        <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+
+                                            <MenuItem Header="Edit"
+                                                      Command="{Binding UpdatePlaylistDialogCommand}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+
+                                            <MenuItem Header="Delete"
+                                                      Command="{Binding DeleteSelectedPlaylistCommand}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+
+                    </ListBox>
                 </DockPanel>
 
             </Border>
