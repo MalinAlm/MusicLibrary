@@ -12,6 +12,9 @@ public partial class MainWindow : Window
 {
     private MusicViewModel _vm;
 
+    private IReadOnlyList<Artist> _allArtistsTree = Array.Empty<Artist>();
+    private bool _isArtistSearchActive;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -61,9 +64,40 @@ public partial class MainWindow : Window
     private async Task LoadArtistsAsync()
     {
         var artists = await _vm.LoadArtistsTreeAsync();
+        _allArtistsTree = artists;
         myTreeView.ItemsSource = new ObservableCollection<Artist>(artists);
     }
 
+    private void ArtistsSearchButton_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyArtistTreeSearch();
+    }
+
+    private void ArtistsClearSearchButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MusicViewModel vm)
+            vm.ArtistTreeSearchText = "";
+
+        _isArtistSearchActive = false;
+        myTreeView.ItemsSource = new ObservableCollection<Artist>(_allArtistsTree);
+    }
+
+    private void InfoButton_Click(object sender, RoutedEventArgs e)
+    {
+        const string message =
+            "Search artist/album/track. Press Enter or click Search.\n\n" +
+            "You can also right click artist/album/track to access context menu for editing.";
+
+        MessageBox.Show(message, "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void ArtistsSearchTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+            return;
+
+        ApplyArtistTreeSearch();
+    }
 
     private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
@@ -125,6 +159,177 @@ public partial class MainWindow : Window
 
     }
 
+    private void ApplyArtistTreeSearch()
+    {
+        if (DataContext is not MusicViewModel vm)
+            return;
+
+        string query = (vm.ArtistTreeSearchText ?? "").Trim();
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            _isArtistSearchActive = false;
+            myTreeView.ItemsSource = new ObservableCollection<Artist>(_allArtistsTree);
+            return;
+        }
+
+        _isArtistSearchActive = true;
+
+        var filtered = BuildFilteredArtistTree(_allArtistsTree, query);
+        myTreeView.ItemsSource = new ObservableCollection<Artist>(filtered);
+
+        // Expandera så matchande album/tracks syns direkt
+        Dispatcher.BeginInvoke(new Action(() => ExpandAllArtistsAndAlbums(myTreeView)));
+    }
+
+
+    private static List<Artist> BuildFilteredArtistTree(IEnumerable<Artist> sourceArtists, string query)
+    {
+        var results = new List<Artist>();
+        var q = query.Trim();
+
+        foreach (var artist in sourceArtists)
+        {
+            bool artistMatches =
+                !string.IsNullOrWhiteSpace(artist.Name) &&
+                artist.Name.Contains(q, StringComparison.OrdinalIgnoreCase);
+
+            if (artistMatches)
+            {
+                // Artist-match -> visa hela artistens träd
+                results.Add(CloneArtistWithAllChildren(artist));
+                continue;
+            }
+
+            var matchedAlbums = new List<Album>();
+
+            foreach (var album in artist.Albums)
+            {
+                bool albumMatches =
+                    !string.IsNullOrWhiteSpace(album.Title) &&
+                    album.Title.Contains(q, StringComparison.OrdinalIgnoreCase);
+
+                if (albumMatches)
+                {
+                    matchedAlbums.Add(CloneAlbumWithAllTracks(album));
+                    continue;
+                }
+
+                var matchedTracks = album.Tracks
+                    .Where(t => !string.IsNullOrWhiteSpace(t.Name) &&
+                                t.Name.Contains(q, StringComparison.OrdinalIgnoreCase))
+                    .Select(CloneTrackShallow)
+                    .ToList();
+
+                if (matchedTracks.Count > 0)
+                {
+                    matchedAlbums.Add(CloneAlbumWithSpecificTracks(album, matchedTracks));
+                }
+            }
+
+            if (matchedAlbums.Count > 0)
+            {
+                var artistClone = new Artist
+                {
+                    ArtistId = artist.ArtistId,
+                    Name = artist.Name,
+                    Albums = matchedAlbums
+                };
+
+                // sätt back-references för trygg navigation i UI/dialoger
+                foreach (var albumClone in artistClone.Albums)
+                    albumClone.Artist = artistClone;
+
+                results.Add(artistClone);
+            }
+        }
+
+        return results;
+    }
+
+    private static Artist CloneArtistWithAllChildren(Artist artist)
+    {
+        var artistClone = new Artist
+        {
+            ArtistId = artist.ArtistId,
+            Name = artist.Name,
+            Albums = artist.Albums.Select(CloneAlbumWithAllTracks).ToList()
+        };
+
+        foreach (var albumClone in artistClone.Albums)
+            albumClone.Artist = artistClone;
+
+        return artistClone;
+    }
+
+    private static Album CloneAlbumWithAllTracks(Album album)
+    {
+        var albumClone = new Album
+        {
+            AlbumId = album.AlbumId,
+            Title = album.Title,
+            ArtistId = album.ArtistId,
+            Tracks = album.Tracks.Select(CloneTrackShallow).ToList()
+        };
+
+        foreach (var trackClone in albumClone.Tracks)
+            trackClone.Album = albumClone;
+
+        return albumClone;
+    }
+
+    private static Album CloneAlbumWithSpecificTracks(Album album, List<Track> tracks)
+    {
+        var albumClone = new Album
+        {
+            AlbumId = album.AlbumId,
+            Title = album.Title,
+            ArtistId = album.ArtistId,
+            Tracks = tracks
+        };
+
+        foreach (var trackClone in albumClone.Tracks)
+            trackClone.Album = albumClone;
+
+        return albumClone;
+    }
+
+    private static Track CloneTrackShallow(Track track)
+    {
+        return new Track
+        {
+            TrackId = track.TrackId,
+            Name = track.Name,
+            AlbumId = track.AlbumId,
+            MediaTypeId = track.MediaTypeId,
+            GenreId = track.GenreId,
+            Composer = track.Composer,
+            Milliseconds = track.Milliseconds,
+            Bytes = track.Bytes,
+            UnitPrice = track.UnitPrice
+        };
+    }
+
+
+    private static void ExpandAllArtistsAndAlbums(TreeView treeView)
+    {
+        foreach (var item in treeView.Items)
+        {
+            if (treeView.ItemContainerGenerator.ContainerFromItem(item) is not TreeViewItem artistItem)
+                continue;
+
+            artistItem.IsExpanded = true;
+            artistItem.UpdateLayout();
+
+            foreach (var album in artistItem.Items)
+            {
+                if (artistItem.ItemContainerGenerator.ContainerFromItem(album) is TreeViewItem albumItem)
+                {
+                    albumItem.IsExpanded = true;
+                }
+            }
+        }
+    }
 
     //Meny
     private async Task OpenDialogAndRefreshAsync(CrudMode mode, EntityType entity, object? context)

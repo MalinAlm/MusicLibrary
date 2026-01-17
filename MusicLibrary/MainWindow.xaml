@@ -68,7 +68,7 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="400" />
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
 
@@ -133,75 +133,99 @@
 
 
             <!-- MIDDLE: ARTISTS -->
-
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <Border 
-                        BorderBrush="LightGray"
+                <Border BorderBrush="LightGray"
                         BorderThickness="1"
                         Margin="5">
                     <DockPanel>
-                        <Grid>
+                        <Grid Margin="5">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
+                                <!-- Header -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- Search -->
                                 <RowDefinition Height="*"/>
+                                <!-- Tree -->
                             </Grid.RowDefinitions>
-                            <StackPanel Grid.Row="0" Orientation="Horizontal">
-                            
 
-                                <Grid Grid.Row="0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
+                            <!-- Header -->
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-                                    <TextBlock Grid.Column="0"
-                                               Text="Artists"
-                                               FontWeight="Bold"
-                                               Padding="5"
-                                               VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="0"
+                                           Text="Artists"
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
 
-                                    <!-- Add artist  -->
-                                    <Button Grid.Column="2"
-                                            Style="{StaticResource HeaderIconButton}"
-                                            Margin="180,0,6,0"
-                                            Command="{Binding AddArtistDialogCommand}"
-                                            ToolTip="Add artist">
-                                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;"/>
-                                    </Button>
+                                <!-- Add artist -->
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource HeaderIconButton}"
+                                        Margin="0,0,6,0"
+                                        Command="{Binding AddArtistDialogCommand}"
+                                        ToolTip="Add artist">
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;"/>
+                                </Button>
 
-                                    <!-- Info icon -->
-                                    <TextBlock Grid.Column="3"
-                                               Text="ⓘ"
-                                               FontSize="20"
-                                               Margin="0,0,5,0"
+                                <!-- Info icon -->
+                                <Button Grid.Column="2"
+                                        Style="{StaticResource HeaderIconButton}"
+                                        ToolTipService.ShowDuration="60000"
+                                        Click="InfoButton_Click"
+                                        AutomationProperties.Name="Information"
+                                        AutomationProperties.HelpText="Search artist/album/track. Press Enter or click Search.&#x0a;You can also right click artist/album/track to access context menu for editing.">
+
+                                    <Button.ToolTip>
+                                        <ToolTip Placement="Mouse">
+                                            <TextBlock TextWrapping="Wrap">
+                                                <Run Text="Search artist/album/track. Press Enter or click Search."/>
+                                                <LineBreak/>
+                                                <Run Text="You can also right click artist/album/track to access context menu for editing."/>
+                                            </TextBlock>
+                                        </ToolTip>
+                                    </Button.ToolTip>
+
+                                    <TextBlock Text="ⓘ"
+                                               FontSize="18"
                                                VerticalAlignment="Center"
-                                               Cursor="Arrow"
-                                               Focusable="True"
-                                               ToolTipService.ShowDuration="60000"
-                                               AutomationProperties.Name="Information"
-                                               AutomationProperties.HelpText="Select an artist and an album, then double click a track to add to playlist">
-                                        <TextBlock.ToolTip>
-                                            <ToolTip Placement="Mouse">
-                                                <TextBlock Text="Select an artist and an album, then double click a track to add to playlist"/>
-                                            </ToolTip>
-                                        </TextBlock.ToolTip>
-                                    </TextBlock>
-                                </Grid>
+                                               HorizontalAlignment="Center"/>
+                                </Button>
 
+                            </Grid>
 
+                            <!-- Search row -->
+                            <StackPanel Grid.Row="1"
+                                        Orientation="Horizontal"
+                                        Margin="0,8,0,8">
+                                <TextBox x:Name="ArtistsSearchTextBox"
+                                         Width="170"
+                                         Text="{Binding ArtistTreeSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         KeyDown="ArtistsSearchTextBox_KeyDown"
+                                         ToolTip="Search artist, album or track"/>
+
+                                <Button Content="Search"
+                                        Margin="6,0,0,0"
+                                        Click="ArtistsSearchButton_Click"/>
+
+                                <Button Content="Clear"
+                                        Margin="6,0,0,0"
+                                        Click="ArtistsClearSearchButton_Click"/>
                             </StackPanel>
+
+                            <!-- Tree -->
                             <TreeView x:Name="myTreeView"
+                                      Grid.Row="2"
                                       Tag="{Binding}"
                                       SelectedItemChanged="TreeView_SelectedItemChanged"
-                                      Margin="5" Grid.Row="1" 
                                       MouseDoubleClick="TreeView_MouseDoubleClick">
-                              
+
                                 <TreeView.ItemContainerStyle>
                                     <Style TargetType="TreeViewItem">
                                         <EventSetter Event="PreviewMouseRightButtonDown"

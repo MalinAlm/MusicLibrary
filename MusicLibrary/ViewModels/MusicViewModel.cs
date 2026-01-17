@@ -255,6 +255,20 @@ namespace MusicLibrary.ViewModels
             }
         }
 
+        private string _artistTreeSearchText = "";
+        public string ArtistTreeSearchText
+        {
+            get => _artistTreeSearchText;
+            set
+            {
+                if (_artistTreeSearchText == value)
+                    return;
+
+                _artistTreeSearchText = value;
+                OnPropertyChanged(nameof(ArtistTreeSearchText));
+            }
+        }
+
         //---- METHODS ----
 
         public async Task LoadDataAsync()
