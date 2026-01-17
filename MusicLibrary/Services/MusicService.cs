@@ -153,19 +153,40 @@ namespace MusicLibrary.Services
         public async Task DeleteArtistAsync(int artistId)
         {
             using var db = new MusicContext();
+            using var tx = await db.Database.BeginTransactionAsync();
 
-            var artist = await db.Artists
-                .Include(a => a.Albums)
-                .FirstOrDefaultAsync(a => a.ArtistId == artistId);
+            // 1) Ta bort playlist_track för alla tracks som ligger på album som tillhör artisten
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE pt
+                FROM music.playlist_track pt
+                INNER JOIN music.tracks t ON t.TrackId = pt.TrackId
+                INNER JOIN music.albums al ON al.AlbumId = t.AlbumId
+                WHERE al.ArtistId = @p0",
+                artistId);
 
-            if (artist == null) return;
+            // 2) Ta bort tracks på artistens album
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE t
+                FROM music.tracks t
+                INNER JOIN music.albums al ON al.AlbumId = t.AlbumId
+                WHERE al.ArtistId = @p0",
+                artistId);
 
-            if (artist.Albums.Any())
-                throw new InvalidOperationException("Artisten har album kopplade och kan inte tas bort.");
+            // 3) Ta bort albumen
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM music.albums
+                WHERE ArtistId = @p0",
+                artistId);
 
-            db.Artists.Remove(artist);
-            await db.SaveChangesAsync();
+            // 4) Ta bort artisten
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM music.artists
+                WHERE ArtistId = @p0",
+                artistId);
+
+            await tx.CommitAsync();
         }
+
 
         public async Task<List<Playlist>> GetPlaylistsAsync()
         {
@@ -377,19 +398,31 @@ namespace MusicLibrary.Services
         public async Task DeleteAlbumAsync(int albumId)
         {
             using var db = new MusicContext();
+            using var tx = await db.Database.BeginTransactionAsync();
 
-            var album = await db.Albums
-                .Include(a => a.Tracks)
-                .FirstOrDefaultAsync(a => a.AlbumId == albumId);
+            //  Ta bort playlist_track-rader för alla tracks som ligger i albumet
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE pt
+                FROM music.playlist_track pt
+                INNER JOIN music.tracks t ON t.TrackId = pt.TrackId
+                WHERE t.AlbumId = @p0",
+                albumId);
 
-            if (album == null) return;
+            //  Ta bort tracks i albumet
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM music.tracks
+                WHERE AlbumId = @p0",
+                albumId);
 
-            if (album.Tracks.Any())
-                throw new InvalidOperationException("Albumet har låtar kopplade och kan inte tas bort.");
+            //  Ta bort albumet
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM music.albums
+                WHERE AlbumId = @p0",
+                albumId);
 
-            db.Albums.Remove(album);
-            await db.SaveChangesAsync();
+            await tx.CommitAsync();
         }
+
 
     }
 
