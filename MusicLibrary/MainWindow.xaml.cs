@@ -85,8 +85,9 @@ public partial class MainWindow : Window
     private void InfoButton_Click(object sender, RoutedEventArgs e)
     {
         const string message =
+            "Click the plus icon to add artist \n\n" +
             "Search artist/album/track. Press Enter or click Search.\n\n" +
-            "You can also right click artist/album/track to access context menu for editing.";
+            "Right click artist/album/track to access context menu for editing.";
 
         MessageBox.Show(message, "Information", MessageBoxButton.OK, MessageBoxImage.Information);
     }

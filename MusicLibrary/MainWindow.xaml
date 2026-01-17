@@ -180,14 +180,16 @@
                                         ToolTipService.ShowDuration="60000"
                                         Click="InfoButton_Click"
                                         AutomationProperties.Name="Information"
-                                        AutomationProperties.HelpText="Search artist/album/track. Press Enter or click Search.&#x0a;You can also right click artist/album/track to access context menu for editing.">
+                                        AutomationProperties.HelpText="Click the plus icon to add artist¨. Search artist/album/track. Press Enter or click Search. Right click artist/album/track to access context menu for editing.">
 
                                     <Button.ToolTip>
                                         <ToolTip Placement="Mouse">
                                             <TextBlock TextWrapping="Wrap">
+                                                <Run Text="Click the plus icon to add artist" />
+                                                <LineBreak/>
                                                 <Run Text="Search artist/album/track. Press Enter or click Search."/>
                                                 <LineBreak/>
-                                                <Run Text="You can also right click artist/album/track to access context menu for editing."/>
+                                                <Run Text="Right click artist/album/track to access menu for editing."/>
                                             </TextBlock>
                                         </ToolTip>
                                     </Button.ToolTip>

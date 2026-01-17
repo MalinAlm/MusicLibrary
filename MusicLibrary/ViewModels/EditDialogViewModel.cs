@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Data;
-using MusicLibrary.Views.Dialogs;
 
 
 namespace MusicLibrary.ViewModels;
@@ -488,7 +487,7 @@ public class EditDialogViewModel : BaseViewModel
 
     private async Task ConfirmAsync()
     {
-        // stoppa dubbelkörning
+        //prevent double execution
         if (IsBusy)
             return;
 
@@ -498,19 +497,7 @@ public class EditDialogViewModel : BaseViewModel
         {
             ErrorText = "";
 
-            string itemDescription = GetPendingItemDescription();
-
-            string title = GetConfirmTitle();
-            string okText = GetOkButtonText();
-            string verb = GetActionVerb();
-
-            string message = $"Are you sure you want to {verb}:\n\n{itemDescription}?";
-
-            bool userConfirmed = UserConfirmedAction(title, message, okText);
-            if (!userConfirmed)
-                return;
-
-
+          
             if (Entity == EntityType.Playlist)
                 await DoPlaylistAsync();
             else if (Entity == EntityType.Artist)
@@ -520,9 +507,7 @@ public class EditDialogViewModel : BaseViewModel
             else
                 await DoTrackAsync();
 
-
-            ShowActionSuccess(Mode, itemDescription);
-
+            
             _owner.DialogResult = true;
             _owner.Close();
         }
@@ -534,130 +519,6 @@ public class EditDialogViewModel : BaseViewModel
         {
             IsBusy = false;
         }
-    }
-
-    private void ShowActionSuccess(CrudMode mode, string itemDescription)
-    {
-        string title = mode switch
-        {
-            CrudMode.Add => "Added",
-            CrudMode.Update => "Updated",
-            CrudMode.Delete => "Deleted",
-            _ => "Done"
-        };
-
-        var infoDialog = new InfoDialog(
-            dialogTitle: title,
-            messageText: $"{title}:\n\n{itemDescription}")
-        {
-            Owner = _owner
-        };
-
-        infoDialog.ShowDialog();
-    }
-    private bool UserConfirmedAction(string dialogTitle, string messageText, string okButtonText)
-    {
-        var confirmDialog = new ConfirmDialog(
-            dialogTitle: dialogTitle,
-            messageText: messageText,
-            okButtonText: okButtonText,
-            cancelButtonText: "Cancel")
-        {
-            Owner = _owner
-        };
-
-        return confirmDialog.ShowDialog() == true;
-    }
-
-    private string GetConfirmTitle() => Mode switch
-    {
-        CrudMode.Add => "Confirm add",
-        CrudMode.Update => "Confirm update",
-        CrudMode.Delete => "Confirm delete",
-        _ => "Confirm"
-    };
-
-    private string GetOkButtonText() => Mode switch
-    {
-        CrudMode.Add => "Add",
-        CrudMode.Update => "Update",
-        CrudMode.Delete => "Delete",
-        _ => "OK"
-    };
-
-    private string GetActionVerb() => Mode switch
-    {
-        CrudMode.Add => "add",
-        CrudMode.Update => "update",
-        CrudMode.Delete => "delete",
-        _ => "apply changes to"
-    };
-
-
-    private static string Fallback(string? value, string fallback)
-    => string.IsNullOrWhiteSpace(value) ? fallback : value;
-
-
-    private string GetPendingItemDescription()
-    {
-
-        if (Mode == CrudMode.Delete)
-            return GetSelectedItemDescriptionForDialog();
-
-
-        if (Mode == CrudMode.Add)
-        {
-            return Entity switch
-            {
-                EntityType.Playlist =>
-                    $"Playlist:\nName: {Fallback(Name, "(empty)")}",
-
-            EntityType.Artist =>
-                string.IsNullOrWhiteSpace(NewAlbumTitle)
-                    ? $"Artist:\nName: {Fallback(Name, "(empty)")}"
-                    : $"Artist:\nName: {Fallback(Name, "(empty)")}\nCreate album: {NewAlbumTitle}",
-
-            EntityType.Album =>
-                $"Album:\nTitle: {Fallback(Name, "(empty)")}\nArtist: {SelectedArtistForAlbum?.Name ?? "(none)"}",
-
-            EntityType.Track =>
-                $"Track:\nName: {Fallback(Name, "(empty)")}\nLength (ms): {Fallback(MillisecondsText, "(empty)")}\nAlbum: {SelectedAlbum?.Title ?? "(No album)"}",
-
-            _ => Fallback(Name, "(empty)")
-            };
-        }
-
-        if (Mode == CrudMode.Update)
-        {
-            if (SelectedSelectorItem == null)
-                return "(No item selected)";
-
-            return Entity switch
-            {
-                EntityType.Playlist when SelectedSelectorItem is Playlist p =>
-                    "Playlist:\n" +
-                    $"Name: {Fallback(p.Name, "(No name)")} → {Fallback(Name, "(empty)")}",
-
-                EntityType.Artist when SelectedSelectorItem is Artist a =>
-                    "Artist:\n" +
-                    $"Name: {Fallback(a.Name, "(No name)")} → {Fallback(Name, "(empty)")}",
-
-                EntityType.Album when SelectedSelectorItem is Album al =>
-                    "Album:\n" +
-                    $"Title: {Fallback(al.Title, "(No title)")} → {Fallback(Name, "(empty)")}\n" +
-                    $"Artist: {al.Artist?.Name ?? "(Unknown artist)"} → {SelectedArtistForAlbum?.Name ?? "(none)"}",
-
-                EntityType.Track when SelectedSelectorItem is Track t =>
-                    "Track:\n" +
-                    $"Name: {Fallback(t.Name, "(No name)")} → {Fallback(Name, "(empty)")}\n" +
-                    $"Length (ms): {t.Milliseconds} → {Fallback(MillisecondsText, "(empty)")}\n" +
-                    $"Album: {t.Album?.Title ?? "(No album)"} → {SelectedAlbum?.Title ?? "(No album)"}",
-
-                _ => SelectedSelectorItem.ToString() ?? ""
-            };
-        }
-
-        return "";
     }
 
 
@@ -952,29 +813,6 @@ public class EditDialogViewModel : BaseViewModel
         RaisePropertyChanged(nameof(TrackSearchTextUserIsTyping));
 
         await ResetSelectorAndLoadFirstPageAsync();
-    }
-
-    private string GetSelectedItemDescriptionForDialog()
-    {
-        if (SelectedSelectorItem == null)
-            return "";
-
-        if (Entity == EntityType.Playlist && SelectedSelectorItem is Playlist playlist)
-            return $"Playlist: {playlist.Name ?? "(No name)"}";
-
-        if (Entity == EntityType.Artist && SelectedSelectorItem is Artist artist)
-            return $"Artist: {artist.Name ?? "(No name)"}";
-
-        if (Entity == EntityType.Album && SelectedSelectorItem is Album album)
-            return $"Album: {album.Title ?? "(No title)"}\nArtist: {album.Artist?.Name ?? "(Unknown artist)"}";
-
-        if (Entity == EntityType.Track && SelectedSelectorItem is Track track)
-        {
-            string albumTitle = track.Album?.Title ?? "(No album)";
-            return $"Track: {track.Name ?? "(No name)"}\nAlbum: {albumTitle}";
-        }
-
-        return "";
     }
 
     private async Task ResetArtistSelectorAndLoadFirstPageAsync()
