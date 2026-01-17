@@ -1,5 +1,6 @@
 ﻿using MusicLibrary.ViewModels;
 using MusicLibrary.Views;
+using MusicLibrary.Services;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,6 +29,8 @@ public partial class MainWindow : Window
     {
         await RefreshAllAsync();
     }
+
+    private readonly MusicLibrary.Services.MusicService _musicService = new();
 
     private async Task RefreshAllAsync()
     {
@@ -345,6 +348,29 @@ public partial class MainWindow : Window
     //Meny
     private async Task OpenDialogAndRefreshAsync(CrudMode mode, EntityType entity, object? context)
     {
+       
+        if (mode == CrudMode.Delete && context != null)
+        {
+            switch (entity)
+            {
+                case EntityType.Artist when context is Artist artist:
+                    await _musicService.DeleteArtistAsync(artist.ArtistId);
+                    await RefreshAllAsync();
+                    return;
+
+                case EntityType.Album when context is Album album:
+                    await _musicService.DeleteAlbumAsync(album.AlbumId);
+                    await RefreshAllAsync();
+                    return;
+
+                case EntityType.Track when context is Track track:
+                    await _musicService.DeleteTrackAsync(track.TrackId);
+                    await RefreshAllAsync();
+                    return;
+            }
+        }
+
+       
         var dlg = new EditDialog(mode, entity, context) { Owner = this };
         var result = dlg.ShowDialog();
 
